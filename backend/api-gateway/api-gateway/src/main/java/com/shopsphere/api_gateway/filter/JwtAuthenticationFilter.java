@@ -1,0 +1,97 @@
+package com.shopsphere.api_gateway.filter;
+
+import com.shopsphere.api_gateway.security.JwtUtil;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.core.Ordered;
+import org.springframework.core.annotation.Order;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.server.reactive.ServerHttpRequest;
+import org.springframework.stereotype.Component;
+import org.springframework.web.server.ServerWebExchange;
+import org.springframework.web.server.WebFilter;
+import org.springframework.web.server.WebFilterChain;
+import reactor.core.publisher.Mono;
+
+import java.nio.charset.StandardCharsets;
+
+@Component
+@RequiredArgsConstructor
+@Slf4j
+@Order(Ordered.HIGHEST_PRECEDENCE + 1)
+public class JwtAuthenticationFilter implements WebFilter {
+
+    private final JwtUtil jwtUtil;
+
+    private static final String[] PUBLIC_PREFIXES = {
+            "/api/auth/",
+            "/api/products/"
+    };
+
+    private static final String[] PROTECTED_PREFIXES = {
+            "/api/orders/",
+            "/api/payments/",
+            "/api/cart/",
+            "/api/inventory/",
+            "/api/notifications/",
+            "/api/analytics/"
+    };
+
+    @Override
+    public Mono<Void> filter(ServerWebExchange exchange, WebFilterChain chain) {
+        String path = exchange.getRequest().getPath().value();
+
+        if (isPublic(path) || !isProtected(path)) {
+            return chain.filter(exchange);
+        }
+
+        String authorization = exchange.getRequest().getHeaders().getFirst("Authorization");
+        if (authorization == null || !authorization.startsWith("Bearer ")) {
+            log.warn("Missing Authorization header for protected path {}", path);
+            return unauthorized(exchange);
+        }
+
+        String token = authorization.substring(7);
+        if (!jwtUtil.isTokenValid(token)) {
+            log.warn("Invalid JWT token for protected path {}", path);
+            return unauthorized(exchange);
+        }
+
+        String email = jwtUtil.extractEmail(token);
+        String role = jwtUtil.extractRole(token);
+
+        ServerHttpRequest mutatedRequest = exchange.getRequest().mutate()
+                .header("X-User-Email", email)
+                .header("X-User-Role", role)
+                .build();
+
+        return chain.filter(exchange.mutate().request(mutatedRequest).build());
+    }
+
+    private boolean matchesAny(String path, String[] prefixes) {
+        for (String prefix : prefixes) {
+            if (path.startsWith(prefix) || path.equals(prefix.substring(0, prefix.length() - 1))) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private boolean isPublic(String path) {
+        return matchesAny(path, PUBLIC_PREFIXES);
+    }
+
+    private boolean isProtected(String path) {
+        return matchesAny(path, PROTECTED_PREFIXES);
+    }
+
+    private Mono<Void> unauthorized(ServerWebExchange exchange) {
+        exchange.getResponse().setStatusCode(HttpStatus.UNAUTHORIZED);
+        exchange.getResponse().getHeaders().setContentType(MediaType.APPLICATION_JSON);
+        byte[] body = "{\"error\":\"Unauthorized\",\"message\":\"Valid JWT token required\"}"
+                .getBytes(StandardCharsets.UTF_8);
+        return exchange.getResponse().writeWith(
+                Mono.just(exchange.getResponse().bufferFactory().wrap(body)));
+    }
+}
