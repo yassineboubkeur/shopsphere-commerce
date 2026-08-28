@@ -5,6 +5,10 @@ import com.shopsphere.order_service.dto.OrderRequest;
 import com.shopsphere.order_service.entity.Order;
 import com.shopsphere.order_service.entity.OrderItem;
 import com.shopsphere.order_service.entity.Payment;
+import com.shopsphere.order_service.event.OrderCreatedEvent;
+import com.shopsphere.order_service.event.OrderDeliveredEvent;
+import com.shopsphere.order_service.event.OrderEventPublisher;
+import com.shopsphere.order_service.event.OrderShippedEvent;
 import com.shopsphere.order_service.repository.OrderRepository;
 import com.shopsphere.order_service.repository.PaymentRepository;
 import lombok.RequiredArgsConstructor;
@@ -22,6 +26,7 @@ public class OrderService {
 
     private final OrderRepository orderRepository;
     private final PaymentRepository paymentRepository;
+    private final OrderEventPublisher orderEventPublisher;
 
     public Order placeOrder(OrderRequest request) {
         List<OrderItem> items = request.getItems().stream()
@@ -42,7 +47,28 @@ public class OrderService {
 
         items.forEach(item -> item.setOrder(order));
 
-        return orderRepository.save(order);
+        Order saved = orderRepository.save(order);
+        orderEventPublisher.publishOrderCreated(toOrderCreatedEvent(saved));
+        return saved;
+    }
+
+    private OrderCreatedEvent toOrderCreatedEvent(Order order) {
+        List<OrderCreatedEvent.OrderItemEvent> itemEvents = order.getItems().stream()
+                .map(item -> OrderCreatedEvent.OrderItemEvent.builder()
+                        .productId(item.getProductId())
+                        .productName(item.getProductName())
+                        .price(item.getPrice())
+                        .quantity(item.getQuantity())
+                        .build())
+                .toList();
+
+        return OrderCreatedEvent.builder()
+                .orderId(order.getId())
+                .userId(order.getUserId())
+                .orderNumber(order.getOrderNumber())
+                .items(itemEvents)
+                .totalAmount(order.getTotalAmount())
+                .build();
     }
 
     public Order getOrderById(Long orderId) {
@@ -64,7 +90,26 @@ public class OrderService {
                 .orElseThrow(() -> new RuntimeException("Order not found"));
         order.setStatus(status);
         order.setUpdatedAt(LocalDateTime.now());
-        return orderRepository.save(order);
+        Order saved = orderRepository.save(order);
+
+        if (status == Order.OrderStatus.SHIPPED) {
+            orderEventPublisher.publishOrderShipped(OrderShippedEvent.builder()
+                    .orderId(saved.getId())
+                    .userId(saved.getUserId())
+                    .orderNumber(saved.getOrderNumber())
+                    .trackingNumber("TRK-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase())
+                    .carrier("ShopSphere Express")
+                    .estimatedDelivery(LocalDateTime.now().plusDays(3))
+                    .build());
+        } else if (status == Order.OrderStatus.DELIVERED) {
+            orderEventPublisher.publishOrderDelivered(OrderDeliveredEvent.builder()
+                    .orderId(saved.getId())
+                    .userId(saved.getUserId())
+                    .orderNumber(saved.getOrderNumber())
+                    .deliveredAt(LocalDateTime.now())
+                    .build());
+        }
+        return saved;
     }
 
     public Order confirmOrder(Long orderId) {

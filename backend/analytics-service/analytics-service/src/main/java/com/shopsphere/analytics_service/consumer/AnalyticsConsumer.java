@@ -3,6 +3,7 @@ package com.shopsphere.analytics_service.consumer;
 import com.shopsphere.analytics_service.config.KafkaConfig;
 import com.shopsphere.analytics_service.entity.AnalyticsEvent;
 import com.shopsphere.analytics_service.event.OrderCreatedEvent;
+import com.shopsphere.analytics_service.event.PaymentFailedEvent;
 import com.shopsphere.analytics_service.event.PaymentSuccessfulEvent;
 import com.shopsphere.analytics_service.service.AnalyticsService;
 import lombok.RequiredArgsConstructor;
@@ -74,6 +75,31 @@ public class AnalyticsConsumer {
             log.info("Saved payment analytics event for order {}", event.getOrderNumber());
         } catch (Exception e) {
             log.error("Failed to process PaymentSuccessful event: {}", e.getMessage(), e);
+        }
+    }
+
+    @KafkaListener(topics = KafkaConfig.PAYMENT_FAILED_TOPIC, groupId = "analytics-service")
+    public void handlePaymentFailed(String message) {
+        try {
+            PaymentFailedEvent event = objectMapper.readValue(message, PaymentFailedEvent.class);
+            log.info("=== ANALYTICS: Payment Failed === Order: {} | Amount: ${} | Reason: {}",
+                    event.getOrderNumber(), event.getAmount(), event.getFailureReason());
+
+            AnalyticsEvent analyticsEvent = AnalyticsEvent.builder()
+                    .eventType("PAYMENT_FAILED")
+                    .orderId(event.getOrderId())
+                    .userId(event.getUserId())
+                    .orderNumber(event.getOrderNumber())
+                    .amount(event.getAmount())
+                    .paymentMethod(event.getPaymentMethod())
+                    .status("FAILED")
+                    .eventTimestamp(LocalDateTime.now())
+                    .build();
+
+            analyticsService.save(analyticsEvent);
+            log.info("Saved payment-failed analytics event for order {}", event.getOrderNumber());
+        } catch (Exception e) {
+            log.error("Failed to process PaymentFailed event: {}", e.getMessage(), e);
         }
     }
 }

@@ -2,7 +2,9 @@ package com.shopsphere.notification_service.service;
 
 import com.shopsphere.notification_service.entity.Notification;
 import com.shopsphere.notification_service.event.OrderCreatedEvent;
+import com.shopsphere.notification_service.event.OrderDeliveredEvent;
 import com.shopsphere.notification_service.event.OrderShippedEvent;
+import com.shopsphere.notification_service.event.PaymentFailedEvent;
 import com.shopsphere.notification_service.event.PaymentSuccessfulEvent;
 import com.shopsphere.notification_service.repository.NotificationRepository;
 import lombok.RequiredArgsConstructor;
@@ -64,6 +66,20 @@ public class NotificationService {
         return sendNotification(notification);
     }
 
+    public Notification sendPaymentFailedNotification(PaymentFailedEvent event) {
+        String subject = "Payment Failed - " + event.getOrderNumber();
+        String body = buildPaymentFailedBody(event);
+        Notification notification = createNotification(event.getUserId(), "PAYMENT_FAILED", subject, body);
+        return sendNotification(notification);
+    }
+
+    public Notification sendOrderDeliveredNotification(OrderDeliveredEvent event) {
+        String subject = "Order Delivered - " + event.getOrderNumber();
+        String body = buildOrderDeliveredBody(event);
+        Notification notification = createNotification(event.getUserId(), "ORDER_DELIVERED", subject, body);
+        return sendNotification(notification);
+    }
+
     private String buildOrderConfirmationBody(OrderCreatedEvent event) {
         StringBuilder sb = new StringBuilder();
         sb.append("Thank you for your order!\n\n");
@@ -95,6 +111,24 @@ public class NotificationService {
         sb.append("Carrier: ").append(event.getCarrier()).append("\n");
         sb.append("Tracking Number: ").append(event.getTrackingNumber()).append("\n");
         sb.append("Estimated Delivery: ").append(event.getEstimatedDelivery()).append("\n");
+        return sb.toString();
+    }
+
+    private String buildPaymentFailedBody(PaymentFailedEvent event) {
+        StringBuilder sb = new StringBuilder();
+        sb.append("Unfortunately, your payment could not be processed.\n\n");
+        sb.append("Order Number: ").append(event.getOrderNumber()).append("\n");
+        sb.append("Amount: $").append(event.getAmount()).append("\n");
+        sb.append("Payment Method: ").append(event.getPaymentMethod()).append("\n");
+        sb.append("Reason: ").append(event.getFailureReason()).append("\n");
+        return sb.toString();
+    }
+
+    private String buildOrderDeliveredBody(OrderDeliveredEvent event) {
+        StringBuilder sb = new StringBuilder();
+        sb.append("Great news! Your order has been delivered.\n\n");
+        sb.append("Order Number: ").append(event.getOrderNumber()).append("\n");
+        sb.append("Delivered At: ").append(event.getDeliveredAt()).append("\n");
         return sb.toString();
     }
 }

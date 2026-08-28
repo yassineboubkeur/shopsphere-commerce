@@ -4,6 +4,9 @@ import com.shopsphere.payment_service.dto.PaymentRequest;
 import com.shopsphere.payment_service.dto.PaymentResponse;
 import com.shopsphere.payment_service.entity.Payment;
 import com.shopsphere.payment_service.event.PaymentEvent;
+import com.shopsphere.payment_service.event.PaymentEventPublisher;
+import com.shopsphere.payment_service.event.PaymentFailedEvent;
+import com.shopsphere.payment_service.event.PaymentSuccessfulEvent;
 import com.shopsphere.payment_service.repository.PaymentRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -25,6 +28,7 @@ public class PaymentService {
     private final PaymentValidationService validationService;
     private final RestTemplate restTemplate;
     private final ApplicationEventPublisher eventPublisher;
+    private final PaymentEventPublisher paymentEventPublisher;
 
     private static final String ORDER_SERVICE_URL = "http://localhost:8083/api/orders";
 
@@ -63,6 +67,7 @@ public class PaymentService {
 
         notifyOrderService(payment.getOrderId(), payment.getTransactionId());
         eventPublisher.publishEvent(new PaymentEvent(this, payment, "COMPLETED"));
+        publishPaymentSuccessful(payment);
 
         return PaymentResponse.builder()
                 .paymentId(payment.getId())
@@ -133,6 +138,8 @@ public class PaymentService {
                 .build();
         payment = paymentRepository.save(payment);
 
+        publishPaymentSuccessful(payment);
+
         return PaymentResponse.builder()
                 .paymentId(payment.getId())
                 .orderId(payment.getOrderId())
@@ -160,6 +167,7 @@ public class PaymentService {
 
         notifyOrderServiceFailed(request.getOrderId());
         eventPublisher.publishEvent(new PaymentEvent(this, payment, "FAILED"));
+        publishPaymentFailed(payment);
 
         return PaymentResponse.builder()
                 .paymentId(payment.getId())
@@ -195,7 +203,10 @@ public class PaymentService {
         payment.setStatus(Payment.PaymentStatus.COMPLETED);
         payment.setTransactionId("TXN-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase());
         payment.setUpdatedAt(LocalDateTime.now());
-        return paymentRepository.save(payment);
+        payment = paymentRepository.save(payment);
+
+        publishPaymentSuccessful(payment);
+        return payment;
     }
 
     public Payment getPaymentById(Long paymentId) {
@@ -226,6 +237,31 @@ public class PaymentService {
 
     public List<Payment> getPaymentsByUserId(Long userId) {
         return paymentRepository.findByUserId(userId);
+    }
+
+    private void publishPaymentSuccessful(Payment payment) {
+        paymentEventPublisher.publishPaymentSuccessful(PaymentSuccessfulEvent.builder()
+                .paymentId(payment.getId())
+                .orderId(payment.getOrderId())
+                .userId(payment.getUserId())
+                .orderNumber(null)
+                .amount(payment.getAmount())
+                .paymentMethod(payment.getPaymentMethod())
+                .transactionId(payment.getTransactionId())
+                .build());
+    }
+
+    private void publishPaymentFailed(Payment payment) {
+        paymentEventPublisher.publishPaymentFailed(PaymentFailedEvent.builder()
+                .paymentId(payment.getId())
+                .orderId(payment.getOrderId())
+                .userId(payment.getUserId())
+                .orderNumber(null)
+                .amount(payment.getAmount())
+                .paymentMethod(payment.getPaymentMethod())
+                .failureReason(payment.getFailureReason())
+                .timestamp(LocalDateTime.now())
+                .build());
     }
 
     private void notifyOrderService(Long orderId, String transactionId) {
