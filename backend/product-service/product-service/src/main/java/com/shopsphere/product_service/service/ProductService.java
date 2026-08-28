@@ -6,6 +6,9 @@ import com.shopsphere.product_service.entity.Product;
 import com.shopsphere.product_service.repository.CategoryRepository;
 import com.shopsphere.product_service.repository.ProductRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
@@ -21,6 +24,7 @@ public class ProductService {
     private final ProductRepository productRepository;
     private final CategoryRepository categoryRepository;
 
+    @CacheEvict(value = "products", allEntries = true)
     public Product create(ProductRequest request) {
         Category category = categoryRepository.findById(request.getCategoryId())
                 .orElseThrow(() -> new RuntimeException("Category not found with id: " + request.getCategoryId()));
@@ -37,10 +41,12 @@ public class ProductService {
         return productRepository.save(product);
     }
 
+    @Cacheable(value = "products", key = "'all'")
     public List<Product> findAll() {
         return productRepository.findAll();
     }
 
+    @Cacheable(value = "product", key = "#id")
     public Product findById(Long id) {
         return productRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Product not found with id: " + id));
@@ -65,6 +71,10 @@ public class ProductService {
         return productRepository.findAll(PageRequest.of(page, size, sort));
     }
 
+    @Caching(evict = {
+            @CacheEvict(value = "products", allEntries = true),
+            @CacheEvict(value = "product", key = "#id")
+    })
     public Product update(Long id, ProductRequest request) {
         Category category = categoryRepository.findById(request.getCategoryId())
                 .orElseThrow(() -> new RuntimeException("Category not found with id: " + request.getCategoryId()));
@@ -79,6 +89,10 @@ public class ProductService {
         return productRepository.save(product);
     }
 
+    @Caching(evict = {
+            @CacheEvict(value = "products", allEntries = true),
+            @CacheEvict(value = "product", key = "#id")
+    })
     public void delete(Long id) {
         Product product = findById(id);
         productRepository.delete(product);
