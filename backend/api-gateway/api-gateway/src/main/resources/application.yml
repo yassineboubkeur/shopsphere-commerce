@@ -5,6 +5,15 @@ spring:
 server:
   port: 8080
 
+eureka:
+  enabled: true
+  url: http://localhost:8761/eureka
+  name: api-gateway
+  host: localhost
+  port: ${server.port}
+  heartbeat-interval-seconds: 30
+  refresh-interval-seconds: 30
+
 jwt:
   secret: c2hvcHNwaGVyZS1zZWNyZXQta2V5LWZvci1qd3QtdG9rZW4tZ2VuZXJhdGlvbi11c2UtaW4tcHJvZHVjdGlvbi1hbmQtbXVzdC1iZS1sb25nLWVub3VnaA==
 

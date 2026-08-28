@@ -1,0 +1,17 @@
+spring:
+  application:
+    name: service-discovery
+
+server:
+  port: 8761
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+
+registry:
+  eviction:
+    interval-seconds: 10
+    expiry-seconds: 90

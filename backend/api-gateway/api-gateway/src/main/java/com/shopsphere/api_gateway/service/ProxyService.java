@@ -24,23 +24,13 @@ import java.util.Map;
 public class ProxyService {
 
     private final WebClient webClient;
+    private final ServiceDiscoveryService serviceDiscovery;
 
     @Value("${gateway.retry.max-attempts:2}")
     private int maxRetries;
 
     @Value("${gateway.retry.delay-seconds:1}")
     private long retryDelaySeconds;
-
-    private static final Map<String, String> SERVICE_MAP = Map.of(
-            "/api/auth", "http://localhost:8081",
-            "/api/products", "http://localhost:8082",
-            "/api/orders", "http://localhost:8083",
-            "/api/cart", "http://localhost:8083",
-            "/api/payments", "http://localhost:8084",
-            "/api/inventory", "http://localhost:8085",
-            "/api/notifications", "http://localhost:8086",
-            "/api/analytics", "http://localhost:8087"
-    );
 
     private static final Map<String, String> FALLBACK_MAP = Map.of(
             "/api/products", "{\"message\":\"Product service unavailable. Fallback response.\"}",
@@ -117,12 +107,7 @@ public class ProxyService {
     }
 
     private String getServiceUrl(String path) {
-        for (Map.Entry<String, String> entry : SERVICE_MAP.entrySet()) {
-            if (path.startsWith(entry.getKey())) {
-                return entry.getValue();
-            }
-        }
-        return null;
+        return serviceDiscovery.resolve(path);
     }
 
     private boolean shouldRetry(Throwable throwable, HttpMethod method) {

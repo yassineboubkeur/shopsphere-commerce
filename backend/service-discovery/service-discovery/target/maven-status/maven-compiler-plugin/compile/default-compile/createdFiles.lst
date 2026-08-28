@@ -1,0 +1,8 @@
+com\shopsphere\service_discovery\service\EvictionService.class
+com\shopsphere\service_discovery\entity\ServiceInstance.class
+com\shopsphere\service_discovery\dto\RegisterRequest.class
+com\shopsphere\service_discovery\service\RegistryService.class
+com\shopsphere\service_discovery\entity\ServiceInstance$ServiceInstanceBuilder.class
+com\shopsphere\service_discovery\controller\EurekaController.class
+com\shopsphere\service_discovery\ServiceDiscoveryApplication.class
+com\shopsphere\service_discovery\dto\RegisterRequest$RegisterRequestBuilder.class
