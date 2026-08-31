@@ -1,5 +1,6 @@
 package com.shopsphere.auth_service.controller;
 
+import com.shopsphere.auth_service.entity.Role;
 import com.shopsphere.auth_service.entity.User;
 import com.shopsphere.auth_service.service.UserService;
 import lombok.RequiredArgsConstructor;
@@ -40,9 +41,61 @@ public class AdminController {
                         "id", user.getId(),
                         "username", user.getUsername(),
                         "email", user.getEmail(),
-                        "role", user.getRoles().iterator().next().getName().name()
+                        "role", user.getRoles().iterator().next().getName().name(),
+                        "createdAt", String.valueOf(user.getCreatedAt())
                 ))
                 .collect(Collectors.toList());
         return ResponseEntity.ok(result);
+    }
+
+    @PutMapping("/users/{id}/role")
+    public ResponseEntity<?> updateRole(
+            @PathVariable Long id,
+            @RequestBody Map<String, String> body,
+            Authentication authentication) {
+        if (!isAdmin(authentication)) {
+            return ResponseEntity.status(org.springframework.http.HttpStatus.FORBIDDEN).build();
+        }
+        String roleName = body.get("role");
+        try {
+            Role.RoleName role = Role.RoleName.valueOf(roleName);
+            if (Role.RoleName.ADMIN.equals(role) && id.equals(authentication.getName() == null ? null : findIdByEmail(authentication.getName()))) {
+                return ResponseEntity.badRequest().body(Map.of("message", "You cannot change your own role"));
+            }
+            User user = userService.updateRole(id, role);
+            return ResponseEntity.ok(Map.of(
+                    "id", user.getId(),
+                    "email", user.getEmail(),
+                    "role", user.getRoles().iterator().next().getName().name()
+            ));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(Map.of("message", "Invalid role: " + roleName));
+        }
+    }
+
+    @DeleteMapping("/users/{id}")
+    public ResponseEntity<Void> deleteUser(
+            @PathVariable Long id,
+            Authentication authentication) {
+        if (!isAdmin(authentication)) {
+            return ResponseEntity.status(org.springframework.http.HttpStatus.FORBIDDEN).build();
+        }
+        userService.delete(id);
+        return ResponseEntity.noContent().build();
+    }
+
+    private boolean isAdmin(Authentication authentication) {
+        if (authentication == null) return false;
+        return authentication.getAuthorities().stream()
+                .map(GrantedAuthority::getAuthority)
+                .anyMatch(a -> a.equals("ROLE_ADMIN"));
+    }
+
+    private Long findIdByEmail(String email) {
+        try {
+            return userService.findByEmail(email).getId();
+        } catch (Exception e) {
+            return null;
+        }
     }
 }

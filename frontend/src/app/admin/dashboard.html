@@ -1,0 +1,87 @@
+<div class="page">
+  <header class="head">
+    <h1>Dashboard</h1>
+    <p class="sub">Overview of the shopsphere store.</p>
+  </header>
+
+  @if (loading()) {
+    <section class="sk-cards">
+      @for (_ of [1, 2, 3, 4, 5, 6]; track $index) {
+        <div class="sk-card"></div>
+      }
+    </section>
+    <section class="sk-list">
+      @for (_ of [1, 2, 3]; track $index) {
+        <div class="sk-row"></div>
+      }
+    </section>
+  } @else {
+    @if (ordersError()) {
+      <p class="hint warn">Orders data unavailable (did you restart order-service?). Products &amp; users still work.</p>
+    }
+
+    <section class="cards">
+      <a class="card" routerLink="/admin/products">
+        <span class="icon green">&#9633;</span>
+        <span class="value">{{ productsCount() }}</span>
+        <span class="label">Products</span>
+      </a>
+      <a class="card" routerLink="/admin/categories">
+        <span class="icon blue">&#9650;</span>
+        <span class="value">{{ categoriesCount() }}</span>
+        <span class="label">Categories</span>
+      </a>
+      <a class="card" routerLink="/admin/orders">
+        <span class="icon purple">&#9855;</span>
+        <span class="value">{{ ordersCount() }}</span>
+        <span class="label">Orders</span>
+      </a>
+      <a class="card" routerLink="/admin/orders">
+        <span class="icon amber">&#36;</span>
+        <span class="value">${{ money(revenue()) }}</span>
+        <span class="label">Revenue</span>
+      </a>
+      <a class="card" routerLink="/admin/orders">
+        <span class="icon red">&#8635;</span>
+        <span class="value">{{ pendingCount() }}</span>
+        <span class="label">Pending</span>
+      </a>
+      <a class="card" routerLink="/admin/users">
+        <span class="icon teal">&#9786;</span>
+        <span class="value">{{ usersCount() }}</span>
+        <span class="label">Users</span>
+      </a>
+    </section>
+
+    <section class="panel">
+      <div class="panel-head">
+        <h2>Recent Orders</h2>
+        <a routerLink="/admin/orders">View all →</a>
+      </div>
+      @if (orders().length === 0) {
+        <p class="empty">No orders yet.</p>
+      } @else {
+        <div class="table">
+          <div class="tr th">
+            <span>Order</span>
+            <span>Customer</span>
+            <span>Items</span>
+            <span>Status</span>
+            <span class="right">Total</span>
+            <span>Date</span>
+          </div>
+          @for (o of recent(); track o.id) {
+            <a class="tr" routerLink="/admin/orders">
+              <span class="strong">{{ o.orderNumber }}</span>
+              <span>{{ o.userName || '—' }}</span>
+              <span>{{ itemsCount(o) }}</span>
+              <span><span class="pill {{ statusClass(o.status) }}">{{ o.status }}</span></span>
+              <span class="right strong">${{ money(o.totalAmount) }}</span>
+              <span>{{ date(o) }}</span>
+            </a>
+          }
+        </div>
+      }
+    </section>
+  }
+</div>

@@ -1,0 +1,62 @@
+<div class="payment-page">
+  <h1>Payment</h1>
+
+  @if (loading()) {
+    <div class="box">Loading order…</div>
+  } @else if (loadError()) {
+    <div class="box error">
+      <p>{{ loadError() }}</p>
+      <a routerLink="/cart" class="back">← Back to cart</a>
+    </div>
+  } @else if (order()) {
+    @let ord = order()!;
+    <div class="payment-layout">
+      <section class="form-block">
+        <h2>Card Details</h2>
+        <div class="field">
+          <label for="cardNumber">Card number *</label>
+          <input id="cardNumber" type="text" inputmode="numeric" placeholder="4111 1111 1111 1111" [value]="card().cardNumber" (input)="update('cardNumber', $any($event.target).value)" autocomplete="cc-number" />
+        </div>
+        <div class="field">
+          <label for="cardHolder">Card holder *</label>
+          <input id="cardHolder" type="text" placeholder="JOHN DOE" [value]="card().cardHolder" (input)="update('cardHolder', $any($event.target).value)" autocomplete="cc-name" />
+        </div>
+        <div class="row-2">
+          <div class="field">
+            <label for="expiryDate">Expiry (MM/YY) *</label>
+            <input id="expiryDate" type="text" inputmode="numeric" placeholder="12/28" [value]="card().expiryDate" (input)="update('expiryDate', $any($event.target).value)" autocomplete="cc-exp" />
+          </div>
+          <div class="field">
+            <label for="cvv">CVV *</label>
+            <input id="cvv" type="password" inputmode="numeric" placeholder="•••" [value]="card().cvv" (input)="update('cvv', $any($event.target).value)" autocomplete="cc-csc" />
+          </div>
+        </div>
+        <p class="hint">Demo mode — any 16-digit card works. No real charge is made.</p>
+      </section>
+
+      <aside class="summary">
+        <h2>Amount to Pay</h2>
+        <div class="amount">${{ money(ord.totalAmount) }}</div>
+        <div class="item-count">{{ totalItems(ord) }} item{{ totalItems(ord) === 1 ? '' : 's' }}</div>
+        <div class="row"><span>Order number</span><span class="mono">{{ ord.orderNumber }}</span></div>
+        <div class="row"><span>Method</span><span>Credit Card</span></div>
+      </aside>
+    </div>
+
+    @if (errors().length > 0) {
+      <div class="alert">
+        @for (e of errors(); track e) {
+          <p>{{ e }}</p>
+        }
+      </div>
+    }
+    @if (paymentError()) {
+      <div class="alert error">{{ paymentError() }}</div>
+    }
+
+    <div class="actions">
+      <button type="button" class="btn-primary" (click)="pay()" [disabled]="paying()">{{ paying() ? 'Processing…' : 'Pay $' + money(ord.totalAmount) }}</button>
+      <a [routerLink]="['/checkout']" class="back">← Back to checkout</a>
+    </div>
+  }
+</div>

@@ -1,0 +1,73 @@
+<div class="cart-page">
+  <div class="page-header">
+    <h1>Shopping Cart</h1>
+    @if (count() > 0) {
+      <button type="button" class="clear-btn" (click)="clearAll()">✕ Clear cart</button>
+    }
+  </div>
+
+  @if (count() === 0) {
+    <div class="empty">
+      <span class="empty-icon">🛒</span>
+      <h2>Your cart is empty</h2>
+      <p>Looks like you haven't added any products yet.</p>
+      <a routerLink="/products" class="btn-primary">Browse products</a>
+    </div>
+  } @else {
+    <div class="cart-layout">
+      <div class="items">
+        @for (item of items(); track item.product.id) {
+          <div class="cart-item">
+            <a class="thumb" [routerLink]="['/products', item.product.id]">
+              @if (item.product.imageUrl) {
+                <img class="image" [src]="item.product.imageUrl" [alt]="item.product.name" />
+              } @else {
+                <div class="placeholder">{{ item.product.name[0] }}</div>
+              }
+            </a>
+            <div class="info">
+              <a class="name" [routerLink]="['/products', item.product.id]">{{ item.product.name }}</a>
+              <span class="category">{{ item.product.category?.name }}</span>
+              <span class="unit-price">${{ money(item.product.price) }} each</span>
+            </div>
+            <div class="qty-row">
+              <div class="qty">
+                <button type="button" (click)="decrease(item)" [disabled]="item.quantity <= 1">−</button>
+                <input
+                  type="number"
+                  min="1"
+                  [max]="item.product.stockQuantity"
+                  [value]="item.quantity"
+                  (input)="onQuantity(item, $any($event.target).value)"
+                />
+                <button type="button" (click)="increase(item)" [disabled]="item.quantity >= item.product.stockQuantity">
+                  +
+                </button>
+              </div>
+              @if (item.quantity >= item.product.stockQuantity) {
+                <span class="stock-limit">Only {{ item.product.stockQuantity }} in stock</span>
+              }
+            </div>
+            <div class="line-total">${{ money(item.product.price * item.quantity) }}</div>
+            <button type="button" class="remove" (click)="remove(item)" title="Remove">✕</button>
+          </div>
+        }
+      </div>
+
+      <aside class="summary">
+        <h2>Order Summary</h2>
+        <div class="row"><span>Subtotal ({{ count() }} item{{ count() === 1 ? '' : 's' }})</span><span>${{ money(subtotal()) }}</span></div>
+        <div class="row">
+          <span>Shipping</span>
+          <span>{{ shipping() === 0 ? 'Free' : '$' + money(shipping()) }}</span>
+        </div>
+        @if (shipping() > 0) {
+          <p class="hint">Add ${{ money(100 - subtotal()) }} more for free shipping!</p>
+        }
+        <div class="row total"><span>Total</span><span>${{ money(total()) }}</span></div>
+        <a routerLink="/checkout" class="btn-primary checkout">Proceed to Checkout</a>
+        <a routerLink="/products" class="continue">← Continue shopping</a>
+      </aside>
+    </div>
+  }
+</div>

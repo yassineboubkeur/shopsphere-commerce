@@ -1,0 +1,180 @@
+<div class="products-page">
+  <div class="page-header">
+    <div>
+      <h1>Products</h1>
+      <p class="subtitle">
+        @if (activeQuery()) {
+          {{ products().length }} result(s) for "{{ activeQuery() }}"
+        } @else {
+          {{ products().length }} product(s)
+        }
+      </p>
+    </div>
+    @if (addedName()) {
+      <span class="toast">✓ {{ addedName() }} added to cart</span>
+    }
+  </div>
+
+  <div class="search-bar">
+    <input
+      type="text"
+      placeholder="Search products by name…"
+      [value]="query()"
+      (input)="onQueryInput($any($event.target).value)"
+      (keyup.enter)="search()"
+    />
+    @if (activeQuery()) {
+      <button type="button" class="clear-btn" (click)="clearSearch()">✕ Clear search</button>
+    }
+  </div>
+
+  <div class="listing">
+    <aside class="sidebar">
+      <section class="facet">
+        <h3>Categories</h3>
+        <select
+          class="category-select"
+          [value]="categoryId()"
+          (change)="onCategoryChange($any($event.target).value)"
+        >
+          <option value="">All ({{ allProducts().length }})</option>
+          @for (cat of categories(); track cat.id) {
+            <option [value]="catKey(cat.id)">
+              {{ cat.name }} ({{ countFor(cat.id) }})
+            </option>
+          }
+        </select>
+        <ul class="category-list">
+          <li>
+            <button type="button" [class.active]="categoryId() === ''" (click)="onCategoryChange('')">
+              <span class="cat-label">All</span>
+              <span class="count">{{ allProducts().length }}</span>
+            </button>
+          </li>
+          @for (cat of categories(); track cat.id) {
+            <li>
+              <button
+                type="button"
+                [class.active]="categoryId() === catKey(cat.id)"
+                (click)="onCategoryChange(catKey(cat.id))"
+              >
+                @if (cat.imageUrl) {
+                  <img class="cat-thumb" [src]="cat.imageUrl" [alt]="cat.name" />
+                }
+                <span class="cat-label">{{ cat.name }}</span>
+                <span class="count">{{ countFor(cat.id) }}</span>
+              </button>
+            </li>
+          }
+        </ul>
+      </section>
+
+      <section class="facet">
+        <h3>Price</h3>
+        <div class="range-chips">
+          @for (r of priceRanges; track r.label) {
+            <button
+              type="button"
+              class="chip"
+              [class.active]="activeRange() === r.label"
+              (click)="onRangeSelect(r.label)"
+            >
+              {{ r.label }}
+            </button>
+          }
+          <button
+            type="button"
+            class="chip"
+            [class.active]="activeRange() === 'custom'"
+            (click)="onCustomToggle()"
+          >
+            Custom
+          </button>
+        </div>
+        @if (activeRange() === 'custom') {
+          <div class="custom-price">
+            <input
+              type="number"
+              min="0"
+              placeholder="Min $"
+              [value]="minPrice()"
+              (input)="onPriceInput($any($event.target).value, maxPrice())"
+            />
+            <input
+              type="number"
+              min="0"
+              placeholder="Max $"
+              [value]="maxPrice()"
+              (input)="onPriceInput(minPrice(), $any($event.target).value)"
+            />
+          </div>
+        }
+      </section>
+
+      @if (filtersActive()) {
+        <button type="button" class="clear-all" (click)="clearFilters()">✕ Clear all filters</button>
+      }
+    </aside>
+
+    <main class="content">
+      <div class="toolbar">
+        <span class="count-label">
+          {{ products().length }} of {{ allProducts().length }} items
+          @if (filtersActive() || activeQuery()) {
+            · filtered
+          }
+        </span>
+        <div class="toolbar-right">
+          <select class="sort-select" [value]="sortBy()" (change)="onSortChange($any($event.target).value)">
+            <option value="featured">Featured</option>
+            <option value="newest">Newest</option>
+            <option value="price-asc">Price: Low to High</option>
+            <option value="price-desc">Price: High to Low</option>
+            <option value="name-asc">Name: A to Z</option>
+          </select>
+          <div class="view-toggle">
+            <button
+              type="button"
+              class="view-btn"
+              [class.active]="viewMode() === 'grid'"
+              (click)="onViewMode('grid')"
+              title="Grid view"
+            >
+              ▦
+            </button>
+            <button
+              type="button"
+              class="view-btn"
+              [class.active]="viewMode() === 'list'"
+              (click)="onViewMode('list')"
+              title="List view"
+            >
+              ≡
+            </button>
+          </div>
+        </div>
+      </div>
+
+      @if (loading()) {
+        <app-loader />
+      } @else if (error()) {
+        <div class="alert error">
+          {{ error() }}
+          <button type="button" class="retry" (click)="load()">Retry</button>
+        </div>
+      } @else if (products().length === 0) {
+        <div class="empty">
+          No products match your filters.
+          <button type="button" class="clear-btn" (click)="clearFilters()">Clear filters</button>
+        </div>
+      } @else {
+        <div class="grid" [class.list]="viewMode() === 'list'">
+          @for (product of pageProducts(); track product.id) {
+            <app-product-card [product]="product" (addToCart)="addToCart($event)" />
+          }
+        </div>
+        <app-pagination [page]="currentPage()" [totalPages]="totalPages()" (pageChange)="onPageChange($event)" />
+      }
+    </main>
+  </div>
+</div>

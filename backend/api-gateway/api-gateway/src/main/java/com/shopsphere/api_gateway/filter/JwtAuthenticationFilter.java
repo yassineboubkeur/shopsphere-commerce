@@ -5,9 +5,12 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.server.reactive.ServerHttpRequest;
+import org.springframework.http.server.reactive.ServerHttpResponse;
 import org.springframework.stereotype.Component;
 import org.springframework.web.server.ServerWebExchange;
 import org.springframework.web.server.WebFilter;
@@ -35,15 +38,30 @@ public class JwtAuthenticationFilter implements WebFilter {
             "/api/cart/",
             "/api/inventory/",
             "/api/notifications/",
-            "/api/analytics/"
+            "/api/analytics/",
+            "/api/user/",
+            "/api/admin/"
     };
 
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, WebFilterChain chain) {
         String path = exchange.getRequest().getPath().value();
 
-        if (isPublic(path) || !isProtected(path)) {
+        if (HttpMethod.OPTIONS.equals(exchange.getRequest().getMethod())) {
+            if (exchange.getRequest().getHeaders().getOrigin() != null) {
+                ServerHttpResponse response = exchange.getResponse();
+                response.setStatusCode(HttpStatus.NO_CONTENT);
+                response.getHeaders().add(HttpHeaders.ACCESS_CONTROL_ALLOW_ORIGIN, "http://localhost:4200");
+                response.getHeaders().add(HttpHeaders.ACCESS_CONTROL_ALLOW_HEADERS, "Authorization, Content-Type");
+                response.getHeaders().add(HttpHeaders.ACCESS_CONTROL_ALLOW_METHODS, "GET, POST, PUT, DELETE, PATCH, OPTIONS");
+                response.getHeaders().add(HttpHeaders.ACCESS_CONTROL_MAX_AGE, "3600");
+                return response.setComplete();
+            }
             return chain.filter(exchange);
+        }
+
+        if (isPublic(path) || !isProtected(path)) {
+            return chain.filter(withOptionalIdentity(exchange));
         }
 
         String authorization = exchange.getRequest().getHeaders().getFirst("Authorization");
@@ -80,6 +98,28 @@ public class JwtAuthenticationFilter implements WebFilter {
 
     private boolean isPublic(String path) {
         return matchesAny(path, PUBLIC_PREFIXES);
+    }
+
+    private ServerWebExchange withOptionalIdentity(ServerWebExchange exchange) {
+        String authorization = exchange.getRequest().getHeaders().getFirst("Authorization");
+        if (authorization == null || !authorization.startsWith("Bearer ")) {
+            return exchange;
+        }
+        String token = authorization.substring(7);
+        if (!jwtUtil.isTokenValid(token)) {
+            return exchange;
+        }
+        try {
+            String email = jwtUtil.extractEmail(token);
+            String role = jwtUtil.extractRole(token);
+            ServerHttpRequest mutatedRequest = exchange.getRequest().mutate()
+                    .header("X-User-Email", email)
+                    .header("X-User-Role", role)
+                    .build();
+            return exchange.mutate().request(mutatedRequest).build();
+        } catch (Exception e) {
+            return exchange;
+        }
     }
 
     private boolean isProtected(String path) {

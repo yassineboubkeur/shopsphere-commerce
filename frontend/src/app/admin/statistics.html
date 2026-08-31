@@ -1,0 +1,87 @@
+<div class="page stats-page">
+  <div class="head">
+    <h1>Statistics</h1>
+    <p class="sub">Sales and order analytics for your store.</p>
+  </div>
+
+  @if (loading()) {
+    <div class="box">Loading statistics…</div>
+  } @else if (loadError()) {
+    <div class="box error">{{ loadError() }}</div>
+  } @else {
+    <div class="kpis">
+      <div class="kpi">
+        <span class="label">Total Sales</span>
+        <span class="value">${{ money(totalSales()) }}</span>
+      </div>
+      <div class="kpi">
+        <span class="label">Total Orders</span>
+        <span class="value">{{ totalOrders() }}</span>
+      </div>
+    </div>
+
+    <div class="grid">
+      <section class="block">
+        <h2>Orders by Status</h2>
+        @if (ordersByStatus().length === 0) {
+          <p class="empty">No data yet.</p>
+        } @else {
+          <div class="bars">
+            @for (row of ordersByStatus(); track row.status) {
+              <div class="bar-row">
+                <span class="bar-label">{{ row.status }}</span>
+                <div class="bar-track">
+                  <div class="bar" [style.width.%]="statusPct(row)" [attr.data-status]="row.status.toLowerCase()"></div>
+                </div>
+                <span class="bar-count">{{ row.count }}</span>
+              </div>
+            }
+          </div>
+        }
+      </section>
+
+      <section class="block">
+        <h2>Best-Selling Products</h2>
+        @if (bestSelling().length === 0) {
+          <p class="empty">No data yet.</p>
+        } @else {
+          <div class="best">
+            @for (product of bestSelling(); track product.productName) {
+              <div class="product-row">
+                <span class="product-name" [title]="product.productName">{{ product.productName }}</span>
+                <div class="bar-track">
+                  <div class="bar product-bar" [style.width.%]="quantityPct(product)"></div>
+                </div>
+                <span class="product-qty">{{ product.totalQuantity }}</span>
+              </div>
+            }
+          </div>
+        }
+      </section>
+    </div>
+
+    <section class="block">
+      <h2>Sales Over Time</h2>
+      @if (salesOverTime().length === 0) {
+        <p class="empty">No data yet.</p>
+      } @else {
+        <table class="sales-table">
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Sales</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (day of salesOverTime(); track day.date) {
+              <tr>
+                <td>{{ day.date }}</td>
+                <td>${{ money(day.totalSales) }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      }
+    </section>
+  }
+</div>

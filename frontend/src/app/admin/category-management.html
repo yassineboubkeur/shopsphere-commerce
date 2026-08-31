@@ -1,0 +1,80 @@
+<div class="page">
+  <header class="head">
+    <div>
+      <h1>Categories</h1>
+      <p class="sub">{{ categories().length }} categories</p>
+    </div>
+    <button class="btn" (click)="openNew()">+ New Category</button>
+  </header>
+
+  @if (toast()) {
+    <div class="toast">✓ {{ toast() }}</div>
+  }
+
+  @if (loading()) {
+    <section class="sk-list">
+      @for (_ of [1, 2, 3]; track $index) {
+        <div class="sk-row"></div>
+      }
+    </section>
+  } @else if (error()) {
+    <div class="banner">
+      <p>Could not load categories.</p>
+      <button class="btn ghost" (click)="load()">Retry</button>
+    </div>
+  } @else {
+    @if (editing) {
+      <section class="form">
+        <h2>{{ editId === null ? 'New category' : 'Edit category' }}</h2>
+        <div class="grid2">
+          <label>Name *
+            <input [(ngModel)]="name" placeholder="Category name" />
+          </label>
+          <label class="wide">Description
+            <textarea [(ngModel)]="description" rows="3" placeholder="Short description"></textarea>
+          </label>
+          <label class="wide">Image URL
+            <input [(ngModel)]="imageUrl" placeholder="https://…" />
+          </label>
+        </div>
+        @if (imageUrl.trim()) {
+          <img class="preview" [src]="imageUrl.trim()" alt="preview" />
+        }
+        <div class="actions">
+          <button class="btn primary" [disabled]="saving()" (click)="save()">{{ saving() ? 'Saving…' : 'Save' }}</button>
+          <button class="btn ghost" (click)="cancel()">Cancel</button>
+        </div>
+      </section>
+    }
+
+    @if (categories().length === 0) {
+      <p class="empty">No categories yet — click “New Category”.</p>
+    } @else {
+      <section class="panel table-wrap">
+        <div class="table">
+          <div class="tr th">
+            <span>Image</span>
+            <span>Name</span>
+            <span>Description</span>
+            <span class="right">Products</span>
+            <span class="right">Actions</span>
+          </div>
+          @for (c of categories(); track c.id) {
+            <div class="tr">
+              <span>
+                <img class="thumb" [src]="image(c)" [alt]="c.name" />
+              </span>
+              <span class="name-col">{{ c.name }}</span>
+              <span class="desc">{{ c.description || '—' }}</span>
+              <span class="right strong">{{ count(c) }}</span>
+              <span class="right">
+                <button class="mini" title="Edit" (click)="openEdit(c)">✎</button>
+                <button class="mini danger" title="Delete" (click)="remove(c)">✕</button>
+              </span>
+            </div>
+          }
+        </div>
+      </section>
+    }
+  }
+</div>

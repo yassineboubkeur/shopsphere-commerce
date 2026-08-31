@@ -21,26 +21,32 @@ public class ServiceDiscoveryService {
     private final RestTemplate restTemplate;
     private final EurekaProperties eurekaProperties;
 
-    private static final Map<String, String> ROUTE_TO_SERVICE = Map.of(
-            "/api/auth", "auth-service",
-            "/api/products", "product-service",
-            "/api/orders", "order-service",
-            "/api/cart", "order-service",
-            "/api/payments", "payment-service",
-            "/api/inventory", "inventory-service",
-            "/api/notifications", "notification-service",
-            "/api/analytics", "analytics-service"
+    private static final Map<String, String> ROUTE_TO_SERVICE = Map.ofEntries(
+            Map.entry("/api/auth", "auth-service"),
+            Map.entry("/api/user", "auth-service"),
+            Map.entry("/api/admin", "auth-service"),
+            Map.entry("/api/products", "product-service"),
+            Map.entry("/api/categories", "product-service"),
+            Map.entry("/api/orders", "order-service"),
+            Map.entry("/api/cart", "order-service"),
+            Map.entry("/api/payments", "payment-service"),
+            Map.entry("/api/inventory", "inventory-service"),
+            Map.entry("/api/notifications", "notification-service"),
+            Map.entry("/api/analytics", "analytics-service")
     );
 
-    private static final Map<String, String> FALLBACK_URLS = Map.of(
-            "/api/auth", "http://localhost:8081",
-            "/api/products", "http://localhost:8082",
-            "/api/orders", "http://localhost:8083",
-            "/api/cart", "http://localhost:8083",
-            "/api/payments", "http://localhost:8084",
-            "/api/inventory", "http://localhost:8085",
-            "/api/notifications", "http://localhost:8086",
-            "/api/analytics", "http://localhost:8087"
+    private static final Map<String, String> FALLBACK_URLS = Map.ofEntries(
+            Map.entry("/api/auth", "http://localhost:8081"),
+            Map.entry("/api/user", "http://localhost:8081"),
+            Map.entry("/api/admin", "http://localhost:8081"),
+            Map.entry("/api/products", "http://localhost:8082"),
+            Map.entry("/api/categories", "http://localhost:8082"),
+            Map.entry("/api/orders", "http://localhost:8083"),
+            Map.entry("/api/cart", "http://localhost:8083"),
+            Map.entry("/api/payments", "http://localhost:8084"),
+            Map.entry("/api/inventory", "http://localhost:8085"),
+            Map.entry("/api/notifications", "http://localhost:8086"),
+            Map.entry("/api/analytics", "http://localhost:8087")
     );
 
     private volatile Map<String, String> serviceUrls = FALLBACK_URLS;

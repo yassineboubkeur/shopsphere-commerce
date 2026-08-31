@@ -1,0 +1,178 @@
+.history-page {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+h1 {
+  margin: 0;
+  font-size: 1.6rem;
+  color: var(--text);
+}
+
+.box {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 0.6rem;
+  padding: 2rem;
+  text-align: center;
+  color: var(--text-faint);
+}
+
+.box.error {
+  color: var(--danger-fg);
+}
+
+.box.error p {
+  margin: 0 0 1rem;
+}
+
+.retry {
+  background: var(--brand);
+  border: 1px solid var(--brand);
+  color: var(--brand-contrast);
+  padding: 0.5rem 1.4rem;
+  border-radius: 0.4rem;
+  cursor: pointer;
+}
+
+.retry:hover {
+  background: var(--brand-strong);
+}
+
+.empty {
+  padding: 4rem 1rem;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 0.6rem;
+}
+
+.empty-icon {
+  font-size: 3rem;
+}
+
+.empty h2 {
+  margin: 0.5rem 0 0;
+  color: var(--text);
+}
+
+.empty p {
+  color: var(--text-faint);
+  margin: 0 0 1rem;
+}
+
+.btn-primary {
+  display: inline-block;
+  background: var(--brand);
+  border: 1px solid var(--brand);
+  color: var(--brand-contrast);
+  padding: 0.7rem 1.6rem;
+  border-radius: 0.4rem;
+  font-size: 0.95rem;
+  cursor: pointer;
+  text-decoration: none;
+  text-align: center;
+}
+
+.btn-primary:hover {
+  background: var(--brand-strong);
+}
+
+.order-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.order-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 0.6rem;
+  padding: 1rem 1.25rem;
+  text-decoration: none;
+  transition: box-shadow 0.15s ease, border-color 0.15s ease;
+}
+
+.order-row:hover {
+  border-color: var(--brand);
+  box-shadow: 0 2px 10px rgba(16, 42, 67, 0.08);
+}
+
+.order-main {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  min-width: 0;
+}
+
+.order-head {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.ordernum {
+  font-family: 'Courier New', monospace;
+  font-weight: 700;
+  color: var(--text);
+  font-size: 0.95rem;
+}
+
+.pill {
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 0.2rem 0.6rem;
+  border-radius: 999px;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.pill.pending {
+  background: var(--pill-pending-bg);
+  color: var(--pill-pending-fg);
+}
+
+.pill.confirmed {
+  background: var(--pill-confirmed-bg);
+  color: var(--pill-confirmed-fg);
+}
+
+.pill.processing {
+  background: var(--pill-processing-bg);
+  color: var(--pill-processing-fg);
+}
+
+.pill.shipped {
+  background: var(--pill-shipped-bg);
+  color: var(--pill-shipped-fg);
+}
+
+.pill.delivered {
+  background: var(--pill-delivered-bg);
+  color: var(--pill-delivered-fg);
+}
+
+.pill.cancelled {
+  background: var(--pill-cancelled-bg);
+  color: var(--pill-cancelled-fg);
+}
+
+.date {
+  color: var(--text-faint);
+  font-size: 0.85rem;
+}
+
+.order-total {
+  font-weight: 700;
+  color: var(--text);
+  white-space: nowrap;
+}

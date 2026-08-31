@@ -1,0 +1,79 @@
+.password-wrap {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.password-wrap input {
+  flex: 1;
+}
+
+.toggle {
+  border: 1px solid var(--border-strong);
+  background: var(--surface);
+  color: var(--text-muted);
+  padding: 0.45rem 0.7rem;
+  border-radius: 0.35rem;
+  cursor: pointer;
+  font-size: 0.8rem;
+  white-space: nowrap;
+}
+
+.toggle:hover {
+  background: var(--bg);
+}
+
+.strength {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin-top: 0.4rem;
+}
+
+.strength-track {
+  flex: 1;
+  height: 6px;
+  background: var(--border);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.strength-fill {
+  height: 100%;
+  background: var(--danger);
+  border-radius: 999px;
+  transition: width 0.25s ease, background 0.25s ease;
+}
+
+.strength-fill.good {
+  background: var(--brand);
+}
+
+.strength-label {
+  font-size: 0.8rem;
+  color: var(--danger);
+  width: 3.5rem;
+  text-align: right;
+}
+
+.strength-label.good {
+  color: var(--brand-strong);
+}
+
+.rules {
+  list-style: none;
+  margin: 0.5rem 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.rules li {
+  font-size: 0.8rem;
+  color: var(--danger-fg);
+}
+
+.rules li.pass {
+  color: var(--brand-strong);
+}

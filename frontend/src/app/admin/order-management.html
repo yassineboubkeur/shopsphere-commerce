@@ -1,0 +1,97 @@
+<div class="page">
+  <header class="head">
+    <div>
+      <h1>Orders</h1>
+      <p class="sub">{{ list().length }} orders</p>
+    </div>
+    <button class="btn ghost" (click)="load()">↻ Refresh</button>
+  </header>
+
+  @if (toast()) {
+    <div class="toast">✓ {{ toast() }}</div>
+  }
+
+  @if (loading()) {
+    <section class="sk-list">
+      @for (_ of [1, 2, 3, 4, 5]; track $index) {
+        <div class="sk-row"></div>
+      }
+    </section>
+  } @else if (error()) {
+    <div class="banner">
+      <p>Could not load orders — is order-service running?</p>
+      <button class="btn ghost" (click)="load()">Retry</button>
+    </div>
+  } @else {
+    <div class="filters">
+      <button class="chip" [class.active]="filter() === 'ALL'" (click)="setFilter('ALL')">All ({{ list().length }})</button>
+      @for (s of flow.values; track s) {
+        <button class="chip" [class.active]="filter() === s" (click)="setFilter(s)">
+          {{ s }} ({{ counts().get(s) ?? 0 }})
+        </button>
+      }
+      <button class="chip" [class.active]="filter() === 'CANCELLED'" (click)="setFilter('CANCELLED')">
+        CANCELLED ({{ counts().get('CANCELLED') ?? 0 }})
+      </button>
+    </div>
+
+    <section class="panel table-wrap">
+      <div class="table">
+        <div class="tr th">
+          <span>Order</span>
+          <span>Customer</span>
+          <span>Items</span>
+          <span>Status</span>
+          <span class="right">Total</span>
+          <span>Date</span>
+          <span class="right">Actions</span>
+        </div>
+        @if (visible().length === 0) {
+          <p class="empty">No orders in this view.</p>
+        } @else {
+          @for (o of visible(); track o.id) {
+            <div class="row-block">
+              <div class="tr" (click)="toggle(o.id)">
+                <span class="strong">{{ o.orderNumber }}</span>
+                <span>{{ o.userName || o.userId || '—' }}</span>
+                <span>{{ itemsCount(o) }}</span>
+                <span><span class="pill {{ statusClass(o.status) }}">{{ o.status }}</span></span>
+                <span class="right strong">${{ money(o.totalAmount) }}</span>
+                <span>{{ date(o) }}</span>
+                <span class="right"><span class="chev">{{ expanded() === o.id ? '▲' : '▼' }}</span></span>
+              </div>
+              @if (expanded() === o.id) {
+                <div class="detail">
+                  <div class="items">
+                    @for (item of o.items; track item.id) {
+                      <div class="item">
+                        <span class="pname">{{ item.productName }}</span>
+                        <span class="qty">× {{ item.quantity }}</span>
+                        <span class="amount">${{ money(item.price * item.quantity) }}</span>
+                      </div>
+                    }
+                  </div>
+                  @if (o.shippingName) {
+                    <div class="ship">
+                      <strong>Shipping:</strong> {{ o.shippingName }}, {{ o.shippingAddress }}, {{ o.shippingCity }} {{ o.shippingZip }} · {{ o.shippingPhone }}
+                    </div>
+                  }
+                  <div class="actions">
+                    @if (flow.next(o.status) && o.status.toUpperCase() !== 'CANCELLED' && o.status.toUpperCase() !== 'PENDING') {
+                      <button class="btn primary" [disabled]="savingId() === o.id" (click)="advance(o)">
+                        {{ savingId() === o.id ? '…' : 'Advance → ' + flow.next(o.status) }}
+                      </button>
+                    }
+                    @if (o.status.toUpperCase() !== 'CANCELLED' && o.status.toUpperCase() !== 'DELIVERED') {
+                      <button class="btn danger" [disabled]="savingId() === o.id" (click)="cancel(o)">Cancel</button>
+                    }
+                  </div>
+                </div>
+              }
+            </div>
+          }
+        }
+      </div>
+    </section>
+  }
+</div>

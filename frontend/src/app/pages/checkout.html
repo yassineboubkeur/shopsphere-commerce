@@ -1,0 +1,77 @@
+<div class="checkout-page">
+  <h1>Checkout</h1>
+
+  @if (count() === 0) {
+    <div class="empty">
+      <span class="empty-icon">🛒</span>
+      <h2>Your cart is empty</h2>
+      <p>Add some products before checking out.</p>
+      <a routerLink="/products" class="btn-primary">Browse products</a>
+    </div>
+  } @else {
+    <div class="checkout-layout">
+      <section class="form-block">
+        <h2>Shipping Information</h2>
+        <div class="field">
+          <label for="fullName">Full name *</label>
+          <input id="fullName" type="text" placeholder="John Doe" [value]="shippingForm().fullName" (input)="update('fullName', $any($event.target).value)" />
+        </div>
+        <div class="field">
+          <label for="address">Street address *</label>
+          <input id="address" type="text" placeholder="123 Main Street, Apt 4B" [value]="shippingForm().address" (input)="update('address', $any($event.target).value)" />
+        </div>
+        <div class="row-2">
+          <div class="field">
+            <label for="city">City *</label>
+            <input id="city" type="text" placeholder="Casablanca" [value]="shippingForm().city" (input)="update('city', $any($event.target).value)" />
+          </div>
+          <div class="field">
+            <label for="zip">ZIP / Postal code *</label>
+            <input id="zip" type="text" placeholder="20000" [value]="shippingForm().zip" (input)="update('zip', $any($event.target).value)" />
+          </div>
+        </div>
+        <div class="field">
+          <label for="phone">Phone *</label>
+          <input id="phone" type="tel" placeholder="+212 6 00 00 00 00" [value]="shippingForm().phone" (input)="update('phone', $any($event.target).value)" />
+        </div>
+      </section>
+
+      <aside class="summary">
+        <h2>Order Summary</h2>
+        <div class="items-list">
+          @for (item of items(); track item.product.id) {
+            <div class="summary-item">
+              <span class="qty">× {{ item.quantity }}</span>
+              <span class="name">{{ item.product.name }}</span>
+              <span class="price">${{ money(item.product.price * item.quantity) }}</span>
+            </div>
+          }
+        </div>
+        <div class="row"><span>Subtotal ({{ count() }} item{{ count() === 1 ? '' : 's' }})</span><span>${{ money(subtotal()) }}</span></div>
+        <div class="row">
+          <span>Shipping</span>
+          <span>{{ shipping() === 0 ? 'Free' : '$' + money(shipping()) }}</span>
+        </div>
+        <div class="row total"><span>Total</span><span>${{ money(total()) }}</span></div>
+      </aside>
+    </div>
+
+    @if (errors().length > 0) {
+      <div class="alert">
+        @for (e of errors(); track e) {
+          <p>{{ e }}</p>
+        }
+      </div>
+    }
+    @if (failed()) {
+      <div class="alert error">{{ failed() }}</div>
+    }
+
+    <div class="actions">
+      <button type="button" class="btn-primary" (click)="placeOrder()" [disabled]="placing()">
+        {{ placing() ? 'Placing order…' : 'Place Order — $' + money(total()) }}
+      </button>
+      <a routerLink="/cart" class="back">← Back to cart</a>
+    </div>
+  }
+</div>

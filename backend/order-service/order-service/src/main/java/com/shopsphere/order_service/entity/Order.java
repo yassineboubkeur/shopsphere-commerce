@@ -26,6 +26,12 @@ public class Order {
     @Column(nullable = false, unique = true)
     private String orderNumber;
 
+    private String shippingName;
+    private String shippingAddress;
+    private String shippingCity;
+    private String shippingZip;
+    private String shippingPhone;
+
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
     private List<OrderItem> items = new ArrayList<>();

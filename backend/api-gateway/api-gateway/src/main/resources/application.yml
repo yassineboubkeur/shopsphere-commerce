@@ -20,13 +20,16 @@ jwt:
 gateway:
   timeout:
     connect: 3000
-    response: 5000
+    response: 15000
   retry:
     max-attempts: 2
     delay-seconds: 1
   routes:
     /api/auth: http://localhost:8081
+    /api/user: http://localhost:8081
+    /api/admin: http://localhost:8081
     /api/products: http://localhost:8082
+    /api/categories: http://localhost:8082
     /api/orders: http://localhost:8083
     /api/payments: http://localhost:8084
     /api/inventory: http://localhost:8085

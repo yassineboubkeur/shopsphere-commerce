@@ -1,0 +1,56 @@
+<div class="confirmation-page">
+  @if (loading()) {
+    <div class="box">Loading confirmation…</div>
+  } @else if (loadError()) {
+    <div class="box error">
+      <p>{{ loadError() }}</p>
+      <a routerLink="/orders" class="btn-primary">Go to my orders</a>
+    </div>
+  } @else if (order()) {
+    @let ord = order()!;
+    <div class="success-hero">
+      <span class="check">✓</span>
+      <h1>Order Confirmed!</h1>
+      <p class="number">Order number: <strong>{{ ord.orderNumber }}</strong></p>
+      @if (payment()?.status === 'SUCCESS') {
+        <p class="txn">Transaction {{ payment()?.transactionId }} — {{ payment()?.message }}</p>
+      }
+    </div>
+
+    <div class="confirmation-layout">
+      <section class="block items-block">
+        <h2>Items ({{ totalQty(ord) }})</h2>
+        <div class="items-list">
+          @for (item of ord.items; track item.id) {
+            <div class="item-row">
+              <span class="qty">× {{ item.quantity }}</span>
+              <span class="name">{{ item.productName }}</span>
+              <span class="price">${{ money(item.price * item.quantity) }}</span>
+            </div>
+          }
+        </div>
+        <div class="row total"><span>Total paid</span><span>${{ money(ord.totalAmount) }}</span></div>
+      </section>
+
+      <section class="block">
+        <h2>Shipping to</h2>
+        <p class="addr">{{ ord.shippingName }}</p>
+        <p class="addr">{{ ord.shippingAddress }}</p>
+        <p class="addr">{{ ord.shippingCity }} {{ ord.shippingZip }}</p>
+        <p class="addr">{{ ord.shippingPhone }}</p>
+        <p class="status">Status: <span class="pill">{{ ord.status }}</span></p>
+      </section>
+    </div>
+
+    <div class="actions">
+      @if (canConfirm(ord)) {
+        <button type="button" class="btn-primary" (click)="confirm()" [disabled]="confirming()">{{ confirming() ? 'Confirming…' : 'Confirm Order' }}</button>
+      }
+      <a routerLink="/products" class="btn-primary">Continue shopping</a>
+      <a routerLink="/orders" class="btn-ghost">View my orders</a>
+    </div>
+    @if (confirmError()) {
+      <p class="confirm-error">{{ confirmError() }}</p>
+    }
+  }
+</div>

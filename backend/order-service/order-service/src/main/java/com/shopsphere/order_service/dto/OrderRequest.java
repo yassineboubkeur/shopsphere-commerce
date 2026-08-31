@@ -15,4 +15,10 @@ public class OrderRequest {
     private Long userId;
 
     private List<OrderItemRequest> items;
+
+    private String shippingName;
+    private String shippingAddress;
+    private String shippingCity;
+    private String shippingZip;
+    private String shippingPhone;
 }

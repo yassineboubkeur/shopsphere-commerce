@@ -1,0 +1,33 @@
+<article class="card">
+  <a class="image-link" [routerLink]="['/products', product().id]">
+    @if (product().imageUrl) {
+      <img class="image" [src]="product().imageUrl" [alt]="product().name" />
+    } @else {
+      <div class="image placeholder-image">{{ product().name[0] }}</div>
+    }
+  </a>
+  <div class="body">
+    <a class="name" [routerLink]="['/products', product().id]">{{ product().name }}</a>
+    <span class="category">{{ product().category?.name }}</span>
+    <p class="description">{{ product().description }}</p>
+    <div class="row">
+      <span class="price">${{ priceLabel() }}</span>
+      <span class="stock" [class.out-of-stock]="product().stockQuantity === 0">
+        {{ product().stockQuantity === 0 ? 'Out of stock' : product().stockQuantity + ' in stock' }}
+      </span>
+    </div>
+    <div class="actions">
+      <a class="btn" [routerLink]="['/products', product().id]">View</a>
+      <button type="button" class="btn btn-primary" [disabled]="product().stockQuantity === 0" (click)="addToCart.emit(product())">
+        @if (showActions()) {
+          <span>Add</span>
+        } @else {
+          <span>Add to cart</span>
+        }
+      </button>
+      @if (showActions()) {
+        <button type="button" class="btn" (click)="edit.emit(product())">Edit</button>
+      }
+    </div>
+  </div>
+</article>

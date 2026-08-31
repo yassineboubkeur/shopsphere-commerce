@@ -1,0 +1,58 @@
+<header class="navbar" [class.open]="menuOpen()">
+  <a class="brand" routerLink="/products" (click)="closeMenu()">
+    <span class="brand-mark">S</span>
+    <span class="brand-text">ShopSphere</span>
+  </a>
+
+  <button
+    type="button"
+    class="burger"
+    aria-label="Toggle menu"
+    [attr.aria-expanded]="menuOpen()"
+    [class.open]="menuOpen()"
+    (click)="toggleMenu()"
+  >
+    <span class="bar"></span>
+    <span class="bar"></span>
+    <span class="bar"></span>
+  </button>
+
+  <nav class="nav-links" [class.open]="menuOpen()">
+    <a routerLink="/products" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }" (click)="closeMenu()">Products</a>
+    <a routerLink="/cart" routerLinkActive="active" (click)="closeMenu()" class="cart-link">
+      Cart
+      <span class="cart-badge" [attr.hidden]="cartCount() === 0">{{ cartCount() }}</span>
+    </a>
+    @if (isLoggedIn()) {
+      <a routerLink="/orders" routerLinkActive="active" (click)="closeMenu()">My Orders</a>
+      @if (isAdmin()) {
+        <a routerLink="/admin/dashboard" routerLinkActive="active" (click)="closeMenu()">Admin</a>
+      }
+    }
+  </nav>
+
+  <div class="nav-auth" [class.open]="menuOpen()">
+    <button
+      type="button"
+      class="theme-toggle"
+      [attr.aria-label]="isDark() ? 'Switch to light mode' : 'Switch to dark mode'"
+      (click)="toggleTheme()"
+    >
+      @if (isDark()) {
+        <svg class="icon sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+      } @else {
+        <svg class="icon moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+      }
+    </button>
+    @if (isLoggedIn()) {
+      <span class="user">
+        <span class="avatar">{{ (user()?.username || 'U').charAt(0).toUpperCase() }}</span>
+        <span class="user-name">{{ user()?.username }}</span>
+      </span>
+      <button type="button" class="btn btn-logout" (click)="logout()">Logout</button>
+    } @else {
+      <a routerLink="/login" class="btn" (click)="closeMenu()">Login</a>
+      <a routerLink="/register" class="btn btn-primary" (click)="closeMenu()">Sign up</a>
+    }
+  </div>
+</header>

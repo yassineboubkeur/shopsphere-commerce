@@ -2,6 +2,7 @@ package com.shopsphere.order_service.service;
 
 import com.shopsphere.order_service.dto.OrderItemRequest;
 import com.shopsphere.order_service.dto.OrderRequest;
+import com.shopsphere.order_service.dto.UpdateOrderRequest;
 import com.shopsphere.order_service.entity.Order;
 import com.shopsphere.order_service.entity.OrderItem;
 import com.shopsphere.order_service.entity.Payment;
@@ -13,6 +14,7 @@ import com.shopsphere.order_service.repository.OrderRepository;
 import com.shopsphere.order_service.repository.PaymentRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -27,6 +29,7 @@ public class OrderService {
     private final OrderRepository orderRepository;
     private final PaymentRepository paymentRepository;
     private final OrderEventPublisher orderEventPublisher;
+    private final StockService stockService;
 
     public Order placeOrder(OrderRequest request) {
         List<OrderItem> items = request.getItems().stream()
@@ -40,6 +43,11 @@ public class OrderService {
         Order order = Order.builder()
                 .userId(request.getUserId())
                 .orderNumber("ORD-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase())
+                .shippingName(request.getShippingName())
+                .shippingAddress(request.getShippingAddress())
+                .shippingCity(request.getShippingCity())
+                .shippingZip(request.getShippingZip())
+                .shippingPhone(request.getShippingPhone())
                 .items(items)
                 .totalAmount(totalAmount)
                 .status(Order.OrderStatus.PENDING)
@@ -48,6 +56,7 @@ public class OrderService {
         items.forEach(item -> item.setOrder(order));
 
         Order saved = orderRepository.save(order);
+        stockService.decrementStock(saved);
         orderEventPublisher.publishOrderCreated(toOrderCreatedEvent(saved));
         return saved;
     }
@@ -71,6 +80,10 @@ public class OrderService {
                 .build();
     }
 
+    public List<Order> getAllOrders() {
+        return orderRepository.findAll();
+    }
+
     public Order getOrderById(Long orderId) {
         return orderRepository.findById(orderId)
                 .orElseThrow(() -> new RuntimeException("Order not found"));
@@ -88,9 +101,14 @@ public class OrderService {
     public Order updateStatus(Long orderId, Order.OrderStatus status) {
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new RuntimeException("Order not found"));
+        Order.OrderStatus previous = order.getStatus();
         order.setStatus(status);
         order.setUpdatedAt(LocalDateTime.now());
         Order saved = orderRepository.save(order);
+
+        if (status == Order.OrderStatus.CANCELLED && previous != Order.OrderStatus.CANCELLED) {
+            stockService.restoreStock(saved);
+        }
 
         if (status == Order.OrderStatus.SHIPPED) {
             orderEventPublisher.publishOrderShipped(OrderShippedEvent.builder()
@@ -120,13 +138,6 @@ public class OrderService {
             throw new RuntimeException("Only PENDING orders can be confirmed");
         }
 
-        Payment payment = paymentRepository.findByOrderId(orderId)
-                .orElseThrow(() -> new RuntimeException("Payment not found for order: " + orderId));
-
-        if (payment.getStatus() != Payment.PaymentStatus.COMPLETED) {
-            throw new RuntimeException("Payment not completed yet");
-        }
-
         order.setStatus(Order.OrderStatus.CONFIRMED);
         order.setUpdatedAt(LocalDateTime.now());
         return orderRepository.save(order);
@@ -139,7 +150,48 @@ public class OrderService {
         payment.setStatus(Payment.PaymentStatus.COMPLETED);
         payment.setTransactionId(transactionId);
         payment.setUpdatedAt(LocalDateTime.now());
-        return paymentRepository.save(payment);
+        paymentRepository.save(payment);
+
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new RuntimeException("Order not found: " + orderId));
+        if (order.getStatus() == Order.OrderStatus.PENDING) {
+            order.setStatus(Order.OrderStatus.CONFIRMED);
+            order.setUpdatedAt(LocalDateTime.now());
+            orderRepository.save(order);
+        }
+
+        return payment;
+    }
+
+    @Transactional
+    public Order updateOrder(Long orderId, Long userId, UpdateOrderRequest request) {
+        Order order = getOrderById(orderId);
+        if (!order.getUserId().equals(userId)) {
+            throw new RuntimeException("Not authorized to update this order");
+        }
+        if (order.getStatus() != Order.OrderStatus.PENDING) {
+            throw new RuntimeException("Only PENDING orders can be updated");
+        }
+        if (request.getShippingName() != null) order.setShippingName(request.getShippingName());
+        if (request.getShippingAddress() != null) order.setShippingAddress(request.getShippingAddress());
+        if (request.getShippingCity() != null) order.setShippingCity(request.getShippingCity());
+        if (request.getShippingZip() != null) order.setShippingZip(request.getShippingZip());
+        if (request.getShippingPhone() != null) order.setShippingPhone(request.getShippingPhone());
+        order.setUpdatedAt(LocalDateTime.now());
+        return orderRepository.save(order);
+    }
+
+    @Transactional
+    public void deleteOrder(Long orderId, Long userId) {
+        Order order = getOrderById(orderId);
+        if (!order.getUserId().equals(userId)) {
+            throw new RuntimeException("Not authorized to delete this order");
+        }
+        if (order.getStatus() != Order.OrderStatus.PENDING) {
+            throw new RuntimeException("Only PENDING orders can be deleted");
+        }
+        stockService.restoreStock(order);
+        orderRepository.delete(order);
     }
 
     private OrderItem mapToOrderItem(OrderItemRequest req) {

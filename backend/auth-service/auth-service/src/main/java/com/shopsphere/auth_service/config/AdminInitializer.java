@@ -5,6 +5,7 @@ import com.shopsphere.auth_service.entity.User;
 import com.shopsphere.auth_service.repository.RoleRepository;
 import com.shopsphere.auth_service.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
@@ -19,21 +20,30 @@ public class AdminInitializer implements CommandLineRunner {
     private final RoleRepository roleRepository;
     private final PasswordEncoder passwordEncoder;
 
+    @Value("${app.admin.email:admin@shopsphere.com}")
+    private String adminEmail;
+
+    @Value("${app.admin.username:admin}")
+    private String adminUsername;
+
+    @Value("${app.admin.password:Zephyr!91Kite}")
+    private String adminPassword;
+
     @Override
     public void run(String... args) {
-        if (userRepository.findByEmail("admin@shopsphere.com").isEmpty()) {
+        if (userRepository.findByEmail(adminEmail).isEmpty()) {
             Role adminRole = roleRepository.findByName(Role.RoleName.ADMIN)
                     .orElseThrow(() -> new RuntimeException("ADMIN role not found"));
 
             User admin = User.builder()
-                    .username("admin")
-                    .email("admin@shopsphere.com")
-                    .password(passwordEncoder.encode("admin123"))
+                    .username(adminUsername)
+                    .email(adminEmail)
+                    .password(passwordEncoder.encode(adminPassword))
                     .roles(Collections.singleton(adminRole))
                     .build();
 
             userRepository.save(admin);
-            System.out.println("✅ Admin user created: admin@shopsphere.com / admin123");
+            System.out.println("Admin user created: " + adminEmail + " / " + adminPassword);
         }
     }
 }

@@ -1,0 +1,103 @@
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+  color: var(--text);
+  background: var(--bg);
+  -webkit-font-smoothing: antialiased;
+  transition: background 0.2s ease, color 0.2s ease;
+}
+
+a {
+  color: inherit;
+}
+
+:root {
+  /* Brand (shared across themes) */
+  --brand: #2bb673;
+  --brand-strong: #249a5f;
+  --brand-alt: #159a8e;
+  --brand-soft: #e9f7f0;
+  --brand-contrast: #ffffff;
+  --accent: #3d7eff;
+  --accent-soft: #dbeafe;
+
+  /* Status pills */
+  --pill-pending-bg: #fef3c7;
+  --pill-pending-fg: #92400e;
+  --pill-confirmed-bg: #dbeafe;
+  --pill-confirmed-fg: #1e40af;
+  --pill-processing-bg: #ede9fe;
+  --pill-processing-fg: #5b21b6;
+  --pill-shipped-bg: #d1fae5;
+  --pill-shipped-fg: #065f46;
+  --pill-delivered-bg: #dcfce7;
+  --pill-delivered-fg: #166534;
+  --pill-cancelled-bg: #fee2e2;
+  --pill-cancelled-fg: #991b1b;
+
+  /* Light theme (default) */
+  --bg: #f5f7fa;
+  --surface: #ffffff;
+  --surface-2: #f7fafc;
+  --surface-hover: #f2f6f9;
+  --border: #e4e7eb;
+  --border-strong: #d3d9e0;
+
+  --text: #1f2933;
+  --text-strong: #14202b;
+  --text-muted: #52606d;
+  --text-faint: #7b8794;
+
+  --danger: #ef4444;
+  --danger-bg: #fee2e2;
+  --danger-fg: #991b1b;
+  --warning-fg: #b45309;
+  --warning-bg: #fffbeb;
+  --warning-border: #fde68a;
+}
+
+html[data-theme="dark"] {
+  --bg: #0f172a;
+  --surface: #1e293b;
+  --surface-2: #273449;
+  --surface-hover: #334155;
+  --border: #334155;
+  --border-strong: #475569;
+
+  --text: #e2e8f0;
+  --text-strong: #f8fafc;
+  --text-muted: #cbd5e1;
+  --text-faint: #94a3b8;
+
+  --brand-soft: rgba(43, 182, 115, 0.18);
+
+  --danger-bg: rgba(239, 68, 68, 0.15);
+  --danger-fg: #fca5a5;
+  --warning-bg: rgba(245, 158, 11, 0.12);
+  --warning-border: rgba(245, 158, 11, 0.35);
+
+  /* Status pills (dark-friendly) */
+  --pill-pending-bg: rgba(245, 158, 11, 0.18);
+  --pill-pending-fg: #fcd34d;
+  --pill-confirmed-bg: rgba(59, 130, 246, 0.18);
+  --pill-confirmed-fg: #93c5fd;
+  --pill-processing-bg: rgba(139, 92, 246, 0.18);
+  --pill-processing-fg: #c4b5fd;
+  --pill-shipped-bg: rgba(20, 184, 166, 0.2);
+  --pill-shipped-fg: #5eead4;
+  --pill-delivered-bg: rgba(34, 197, 94, 0.18);
+  --pill-delivered-fg: #86efac;
+  --pill-cancelled-bg: rgba(239, 68, 68, 0.2);
+  --pill-cancelled-fg: #fca5a5;
+}

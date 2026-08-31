@@ -93,6 +93,41 @@ public class ProductService {
             @CacheEvict(value = "products", allEntries = true),
             @CacheEvict(value = "product", key = "#id")
     })
+    public Product updateStock(Long id, Integer quantity) {
+        Product product = findById(id);
+        product.setStockQuantity(quantity);
+        return productRepository.save(product);
+    }
+
+    @Caching(evict = {
+            @CacheEvict(value = "products", allEntries = true),
+            @CacheEvict(value = "product", key = "#id")
+    })
+    public Product decrementStock(Long id, Integer quantity) {
+        Product product = findById(id);
+        int current = product.getStockQuantity();
+        if (current < quantity) {
+            throw new RuntimeException("Insufficient stock for product " + id
+                    + " | Available: " + current + " | Requested: " + quantity);
+        }
+        product.setStockQuantity(current - quantity);
+        return productRepository.save(product);
+    }
+
+    @Caching(evict = {
+            @CacheEvict(value = "products", allEntries = true),
+            @CacheEvict(value = "product", key = "#id")
+    })
+    public Product increaseStock(Long id, Integer quantity) {
+        Product product = findById(id);
+        product.setStockQuantity(product.getStockQuantity() + quantity);
+        return productRepository.save(product);
+    }
+
+    @Caching(evict = {
+            @CacheEvict(value = "products", allEntries = true),
+            @CacheEvict(value = "product", key = "#id")
+    })
     public void delete(Long id) {
         Product product = findById(id);
         productRepository.delete(product);

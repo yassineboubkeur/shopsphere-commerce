@@ -1,0 +1,86 @@
+<div class="page">
+  <header class="head">
+    <div>
+      <h1>Stock</h1>
+      <p class="sub">{{ products().length }} products · {{ lowCount() }} low · {{ outCount() }} out of stock</p>
+    </div>
+    <button class="btn ghost" (click)="load()">↻ Refresh</button>
+  </header>
+
+  @if (toast()) {
+    <div class="toast">✓ {{ toast() }}</div>
+  }
+
+  @if (loading()) {
+    <section class="sk-list">
+      @for (_ of [1, 2, 3, 4, 5]; track $index) {
+        <div class="sk-row"></div>
+      }
+    </section>
+  } @else if (error()) {
+    <div class="banner">
+      <p>Could not load products — is product-service running?</p>
+      <button class="btn ghost" (click)="load()">Retry</button>
+    </div>
+  } @else {
+    <div class="filters">
+      <button class="chip" [class.active]="filter() === 'ALL'" (click)="setFilter('ALL')">All ({{ products().length }})</button>
+      <button class="chip" [class.active]="filter() === 'LOW'" (click)="setFilter('LOW')">Low ≤ 5 ({{ lowCount() }})</button>
+      <button class="chip" [class.active]="filter() === 'OUT'" (click)="setFilter('OUT')">Out of stock ({{ outCount() }})</button>
+      <button class="chip" [class.active]="filter() === 'IN'" (click)="setFilter('IN')">In stock</button>
+    </div>
+
+    <section class="panel table-wrap">
+      <div class="table">
+        <div class="tr th">
+          <span>Product</span>
+          <span>Price</span>
+          <span class="right">Stock</span>
+          <span>Status</span>
+          <span class="right">Update</span>
+        </div>
+        @if (visible().length === 0) {
+          <p class="empty">No products in this view.</p>
+        } @else {
+          @for (p of visible(); track p.id) {
+            @let st = statusFor(p);
+            <div class="tr">
+              <span class="product">
+                <span class="pname">{{ p.name }}</span>
+                <span class="cname">{{ p.category?.name ?? '' }}</span>
+              </span>
+              <span class="muted">${{ money(p.price) }}</span>
+              <span class="right">
+                @if (editingId === p.id) {
+                  <input
+                    class="stock-input"
+                    type="number"
+                    min="0"
+                    step="1"
+                    [(ngModel)]="editValue"
+                    (keydown.enter)="save(p)"
+                  />
+                } @else {
+                  <span class="qty" [class.danger-text]="st.cls === 'out'" [class.warn-text]="st.cls === 'low'">
+                    {{ p.stockQuantity }}
+                  </span>
+                }
+              </span>
+              <span><span class="pill {{ st.cls }}">{{ st.label }}</span></span>
+              <span class="right">
+                @if (editingId === p.id) {
+                  <button class="btn small primary" [disabled]="savingId() === p.id" (click)="save(p)">
+                    {{ savingId() === p.id ? '…' : 'Save' }}
+                  </button>
+                  <button class="btn small" (click)="cancelEdit()">Cancel</button>
+                } @else {
+                  <button class="btn small" (click)="startEdit(p)">Edit</button>
+                }
+              </span>
+            </div>
+          }
+        }
+      </div>
+    </section>
+  }
+</div>

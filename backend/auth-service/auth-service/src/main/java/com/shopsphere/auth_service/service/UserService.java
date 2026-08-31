@@ -63,4 +63,21 @@ public class UserService implements UserDetailsService {
     public java.util.List<User> findAll() {
         return userRepository.findAll();
     }
+
+    public User updateRole(Long userId, Role.RoleName roleName) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found with id: " + userId));
+        Role role = roleRepository.findByName(roleName)
+                .orElseThrow(() -> new RuntimeException(roleName + " role not found"));
+        user.setRoles(new java.util.HashSet<>(Collections.singleton(role)));
+        return userRepository.save(user);
+    }
+
+    public void delete(Long userId) {
+        userRepository.deleteById(userId);
+    }
+
+    public boolean existsById(Long userId) {
+        return userRepository.existsById(userId);
+    }
 }

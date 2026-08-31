@@ -1,0 +1,134 @@
+<div class="detail-page">
+  <a routerLink="/orders" class="back">← Back to my orders</a>
+
+  @if (loading()) {
+    <div class="box">Loading order…</div>
+  } @else if (error() || !order()) {
+    <div class="box error">
+      <p>Could not load this order.</p>
+      <button type="button" class="retry" (click)="load()">Retry</button>
+    </div>
+  } @else {
+    @let ord = order()!;
+    <div class="head">
+      <div>
+        <h1>{{ ord.orderNumber }}</h1>
+        <span class="date">{{ date(ord) }} · {{ itemsCount(ord) }} item{{ itemsCount(ord) === 1 ? '' : 's' }}</span>
+      </div>
+      <span class="pill" [class]="statusClass(ord.status)">{{ ord.status }}</span>
+    </div>
+
+    @if (canPay(ord)) {
+      @if (canConfirm(ord)) {
+        <div class="actions">
+          <button type="button" class="pay-now" (click)="confirmThisOrder()" [disabled]="confirming()">{{ confirming() ? 'Confirming…' : 'Confirm Now' }}</button>
+        </div>
+      } @else {
+        <div class="actions">
+          <button type="button" class="pay-now" (click)="goToPayment(ord)">Pay Now — ${{ money(ord.totalAmount) }}</button>
+          <button type="button" class="btn-ghost" (click)="startEdit(ord)" [disabled]="editing()">Edit</button>
+          <button type="button" class="btn-danger" (click)="deleteThisOrder()" [disabled]="deleting()">{{ deleting() ? 'Deleting…' : 'Delete' }}</button>
+        </div>
+      }
+    }
+    @if (message()) {
+      <div class="message">{{ message() }}</div>
+    }
+
+    <div class="detail-layout">
+      <section class="block items-block">
+        <h2>Items</h2>
+        <div class="table">
+          <div class="tr th">
+            <span>Product</span>
+            <span class="right">Unit</span>
+            <span class="right">Qty</span>
+            <span class="right">Subtotal</span>
+          </div>
+          @for (item of ord.items; track item.id) {
+            <div class="tr">
+              <span>{{ item.productName }}</span>
+              <span class="right">${{ money(item.price) }}</span>
+              <span class="right">× {{ item.quantity }}</span>
+              <span class="right strong">${{ money(item.price * item.quantity) }}</span>
+            </div>
+          }
+        </div>
+        <div class="total-row">
+          <span>Shipping: {{ ord.shippingName ? 'Included' : '—' }}</span>
+          <span class="total">Total: <strong>${{ money(ord.totalAmount) }}</strong></span>
+        </div>
+      </section>
+
+      <section class="block status-block">
+        <h2>Order Status</h2>
+        @if (isCancelled(ord)) {
+          <div class="cancelled-line">
+            <span class="pill cancelled">CANCELLED</span>
+            <p>This order was cancelled.</p>
+          </div>
+        } @else {
+          <div class="stepper">
+            @for (s of statusSteps; track s) {
+              <div class="step" [class.done]="statusIndex(ord) > $index" [class.active]="statusIndex(ord) === $index">
+                <span class="dot">
+                  @if (statusIndex(ord) > $index) {
+                    ✓
+                  } @else {
+                    {{ $index + 1 }}
+                  }
+                </span>
+                <span class="label">{{ s }}</span>
+              </div>
+              @if (!$last) {
+                <span class="line" [class.done]="statusIndex(ord) > $index"></span>
+              }
+            }
+          </div>
+          <p class="note">
+            Current status: <strong>{{ ord.status }}</strong> · {{ date(ord) }}
+          </p>
+        }
+      </section>
+
+      <section class="block">
+        <h2>Shipping to</h2>
+        @if (editing()) {
+          <div class="ship-form">
+            <div class="field">
+              <label for="shippingName">Full name</label>
+              <input id="shippingName" type="text" [value]="form().shippingName" (input)="update('shippingName', $any($event.target).value)" />
+            </div>
+            <div class="field">
+              <label for="shippingAddress">Street address</label>
+              <input id="shippingAddress" type="text" [value]="form().shippingAddress" (input)="update('shippingAddress', $any($event.target).value)" />
+            </div>
+            <div class="field">
+              <label for="shippingCity">City</label>
+              <input id="shippingCity" type="text" [value]="form().shippingCity" (input)="update('shippingCity', $any($event.target).value)" />
+            </div>
+            <div class="field">
+              <label for="shippingZip">ZIP / postal code</label>
+              <input id="shippingZip" type="text" [value]="form().shippingZip" (input)="update('shippingZip', $any($event.target).value)" />
+            </div>
+            <div class="field">
+              <label for="shippingPhone">Phone</label>
+              <input id="shippingPhone" type="text" [value]="form().shippingPhone" (input)="update('shippingPhone', $any($event.target).value)" />
+            </div>
+            <div class="form-actions">
+              <button type="button" class="btn-ghost" (click)="saveShipping()" [disabled]="saving()">{{ saving() ? 'Saving…' : 'Save' }}</button>
+              <button type="button" class="btn-ghost" (click)="cancelEdit()">Cancel</button>
+            </div>
+          </div>
+        } @else if (ord.shippingName) {
+          <p class="addr">{{ ord.shippingName }}</p>
+          <p class="addr">{{ ord.shippingAddress }}</p>
+          <p class="addr">{{ ord.shippingCity }} {{ ord.shippingZip }}</p>
+          <p class="addr">{{ ord.shippingPhone }}</p>
+        } @else {
+          <p class="addr muted">No shipping details recorded.</p>
+        }
+      </section>
+    </div>
+  }
+</div>

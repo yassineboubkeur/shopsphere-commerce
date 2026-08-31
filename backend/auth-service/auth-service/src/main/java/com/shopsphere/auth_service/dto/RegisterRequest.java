@@ -5,6 +5,8 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import lombok.*;
 
+import com.shopsphere.auth_service.validation.ValidPassword;
+
 @Getter
 @Setter
 @NoArgsConstructor
@@ -21,6 +23,6 @@ public class RegisterRequest {
     private String email;
 
     @NotBlank(message = "Password is required")
-    @Size(min = 6, max = 100)
+    @ValidPassword
     private String password;
 }

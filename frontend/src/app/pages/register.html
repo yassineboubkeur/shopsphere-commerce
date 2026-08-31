@@ -1,0 +1,84 @@
+<div class="auth-page">
+  <form class="card auth-form" (ngSubmit)="submit()" [formGroup]="form">
+    <h2>Register</h2>
+    @if (error()) {
+      <div class="alert error">{{ error() }}</div>
+    }
+
+    <label>
+      Username
+      <input type="text" formControlName="username" placeholder="yourusername" autocomplete="username" />
+      @if (form.get('username')?.invalid && form.get('username')?.touched) {
+        <span class="field-error">Username must be at least 3 characters.</span>
+      }
+    </label>
+
+    <label>
+      Email
+      <input type="email" formControlName="email" placeholder="you@example.com" autocomplete="email" />
+      @if (form.get('email')?.invalid && form.get('email')?.touched) {
+        <span class="field-error">A valid email is required.</span>
+      }
+    </label>
+
+    <label>
+      Password
+      <div class="password-wrap">
+        <input
+          [type]="showPassword() ? 'text' : 'password'"
+          formControlName="password"
+          placeholder="••••••••"
+          maxlength="{{ maxLen() }}"
+          autocomplete="new-password"
+          (input)="onPasswordInput()"
+        />
+        <button type="button" class="toggle" (click)="showPassword.set(!showPassword())">
+          {{ showPassword() ? 'Hide' : 'Show' }}
+        </button>
+      </div>
+      @if (pwTouched()) {
+        @let p = policy();
+        <div class="strength">
+          <div class="strength-track">
+            <div class="strength-fill" [style.width.%]="strengthPct(p.score)" [class.good]="p.score >= 5"></div>
+          </div>
+          <span class="strength-label" [class.good]="p.score >= 5">{{ strengthLabel(p.score) }}</span>
+        </div>
+        <ul class="rules">
+          <li [class.pass]="p.rules.lengthOk">{{ ruleItem(p.rules.lengthOk, '8–64 characters') }}</li>
+          <li [class.pass]="p.rules.upperOk">{{ ruleItem(p.rules.upperOk, 'An uppercase letter (A–Z)') }}</li>
+          <li [class.pass]="p.rules.lowerOk">{{ ruleItem(p.rules.lowerOk, 'A lowercase letter (a–z)') }}</li>
+          <li [class.pass]="p.rules.digitOk">{{ ruleItem(p.rules.digitOk, 'A number (0–9)') }}</li>
+          <li [class.pass]="p.rules.specialOk">{{ ruleItem(p.rules.specialOk, 'A special character (!@#…)') }}</li>
+          <li [class.pass]="p.rules.personalOk">{{ ruleItem(p.rules.personalOk, 'Not your username/email or a common password') }}</li>
+        </ul>
+      }
+    </label>
+
+    <label>
+      Confirm password
+      <div class="password-wrap">
+        <input
+          [type]="showConfirm() ? 'text' : 'password'"
+          formControlName="confirmPassword"
+          placeholder="••••••••"
+          autocomplete="new-password"
+        />
+        <button type="button" class="toggle" (click)="showConfirm.set(!showConfirm())">
+          {{ showConfirm() ? 'Hide' : 'Show' }}
+        </button>
+      </div>
+      @if (form.get('confirmPassword')?.invalid && form.get('confirmPassword')?.touched) {
+        <span class="field-error">Please confirm your password.</span>
+      }
+    </label>
+
+    <button type="submit" class="btn btn-primary" [disabled]="loading()">
+      {{ loading() ? 'Creating account...' : 'Register' }}
+    </button>
+
+    <p class="hint">
+      Already have an account? <a routerLink="/login">Login</a>
+    </p>
+  </form>
+</div>

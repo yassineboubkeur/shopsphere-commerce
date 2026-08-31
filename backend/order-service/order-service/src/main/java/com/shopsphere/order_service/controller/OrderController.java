@@ -1,11 +1,13 @@
 package com.shopsphere.order_service.controller;
 
 import com.shopsphere.order_service.dto.OrderRequest;
+import com.shopsphere.order_service.dto.UpdateOrderRequest;
 import com.shopsphere.order_service.entity.Order;
 import com.shopsphere.order_service.entity.Payment;
 import com.shopsphere.order_service.service.OrderService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -18,6 +20,15 @@ import java.util.Map;
 public class OrderController {
 
     private final OrderService orderService;
+
+    @GetMapping
+    public ResponseEntity<List<Order>> getAllOrders(
+            @RequestHeader(value = "X-User-Role", required = false) String role) {
+        if (role == null || !role.toUpperCase().contains("ADMIN")) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
+        return ResponseEntity.ok(orderService.getAllOrders());
+    }
 
     @PostMapping
     public ResponseEntity<Order> placeOrder(@Valid @RequestBody OrderRequest request) {
@@ -42,7 +53,11 @@ public class OrderController {
     @PatchMapping("/{orderId}/status")
     public ResponseEntity<Order> updateStatus(
             @PathVariable Long orderId,
+            @RequestHeader(value = "X-User-Role", required = false) String role,
             @RequestBody Map<String, String> body) {
+        if (role == null || !role.toUpperCase().contains("ADMIN")) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
         Order.OrderStatus status = Order.OrderStatus.valueOf(body.get("status"));
         return ResponseEntity.ok(orderService.updateStatus(orderId, status));
     }
@@ -57,5 +72,21 @@ public class OrderController {
     @PostMapping("/{orderId}/confirm")
     public ResponseEntity<Order> confirmOrder(@PathVariable Long orderId) {
         return ResponseEntity.ok(orderService.confirmOrder(orderId));
+    }
+
+    @PutMapping("/{orderId}")
+    public ResponseEntity<Order> updateOrder(
+            @PathVariable Long orderId,
+            @RequestParam("userId") Long userId,
+            @RequestBody UpdateOrderRequest request) {
+        return ResponseEntity.ok(orderService.updateOrder(orderId, userId, request));
+    }
+
+    @DeleteMapping("/{orderId}")
+    public ResponseEntity<Void> deleteOrder(
+            @PathVariable Long orderId,
+            @RequestParam("userId") Long userId) {
+        orderService.deleteOrder(orderId, userId);
+        return ResponseEntity.noContent().build();
     }
 }

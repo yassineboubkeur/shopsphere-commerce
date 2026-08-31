@@ -18,6 +18,13 @@ public class AuthService {
     private final JwtUtil jwtUtil;
 
     public AuthResponse register(RegisterRequest request) {
+        String usernameLower = request.getUsername().toLowerCase().trim();
+        String emailLocalPart = request.getEmail().toLowerCase().split("@")[0].trim();
+        String password = request.getPassword().toLowerCase();
+        if (password.contains(usernameLower) || (password.contains(emailLocalPart) && emailLocalPart.length() > 2)) {
+            throw new RuntimeException("Password must not contain your username or email.");
+        }
+
         User user = userService.register(
                 request.getUsername(),
                 request.getEmail(),

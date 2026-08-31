@@ -32,15 +32,18 @@ public class ProxyService {
     @Value("${gateway.retry.delay-seconds:1}")
     private long retryDelaySeconds;
 
-    private static final Map<String, String> FALLBACK_MAP = Map.of(
-            "/api/products", "{\"message\":\"Product service unavailable. Fallback response.\"}",
-            "/api/orders", "{\"message\":\"Order service unavailable. Fallback response.\"}",
-            "/api/cart", "{\"message\":\"Cart service unavailable. Fallback response.\"}",
-            "/api/payments", "{\"message\":\"Payment service unavailable. Fallback response.\"}",
-            "/api/inventory", "{\"message\":\"Inventory service unavailable. Fallback response.\"}",
-            "/api/notifications", "{\"message\":\"Notification service unavailable. Fallback response.\"}",
-            "/api/analytics", "{\"message\":\"Analytics service unavailable. Fallback response.\"}",
-            "/api/auth", "{\"message\":\"Auth service unavailable. Fallback response.\"}"
+    private static final Map<String, String> FALLBACK_MAP = Map.ofEntries(
+            Map.entry("/api/products", "{\"message\":\"Product service unavailable. Fallback response.\"}"),
+            Map.entry("/api/categories", "{\"message\":\"Product service unavailable. Fallback response.\"}"),
+            Map.entry("/api/orders", "{\"message\":\"Order service unavailable. Fallback response.\"}"),
+            Map.entry("/api/cart", "{\"message\":\"Cart service unavailable. Fallback response.\"}"),
+            Map.entry("/api/payments", "{\"message\":\"Payment service unavailable. Fallback response.\"}"),
+            Map.entry("/api/inventory", "{\"message\":\"Inventory service unavailable. Fallback response.\"}"),
+            Map.entry("/api/notifications", "{\"message\":\"Notification service unavailable. Fallback response.\"}"),
+            Map.entry("/api/analytics", "{\"message\":\"Analytics service unavailable. Fallback response.\"}"),
+            Map.entry("/api/auth", "{\"message\":\"Auth service unavailable. Fallback response.\"}"),
+            Map.entry("/api/user", "{\"message\":\"Auth service unavailable. Fallback response.\"}"),
+            Map.entry("/api/admin", "{\"message\":\"Auth service unavailable. Fallback response.\"}")
     );
 
     public Mono<ServerResponse> proxy(ServerRequest request) {
@@ -72,16 +75,16 @@ public class ProxyService {
                         .headers(h -> forwardHeaders.forEach(h::add))
                         .contentType(MediaType.APPLICATION_JSON)
                         .bodyValue(body)
-                        .exchangeToMono(response -> response.bodyToMono(String.class)))
+                        .exchangeToMono(response -> response.toEntity(String.class)))
                 .retryWhen(Retry.fixedDelay(maxRetries, Duration.ofSeconds(retryDelaySeconds))
                         .filter(throwable -> shouldRetry(throwable, method)))
-                .map(responseBody -> {
-                    log.info("Response from {}: {}", targetUrl, responseBody);
-                    return responseBody;
+                .map(entity -> {
+                    log.info("Response from {}: {}", targetUrl, entity.getBody());
+                    return entity;
                 })
-                .flatMap(responseBody -> ServerResponse.ok()
+                .flatMap(entity -> ServerResponse.status(entity.getStatusCode())
                         .contentType(MediaType.APPLICATION_JSON)
-                        .bodyValue(responseBody))
+                        .bodyValue(entity.getBody() != null ? entity.getBody() : ""))
                 .onErrorResume(e -> {
                     log.error("Proxy error for {}: {}", targetUrl, e.getMessage());
                     String fallback = getFallbackResponse(path);

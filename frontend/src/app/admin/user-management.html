@@ -1,0 +1,80 @@
+<div class="page">
+  <header class="head">
+    <div>
+      <h1>Users</h1>
+      <p class="sub">{{ users().length }} users · {{ adminCount() }} admin · {{ userCount() }} customer</p>
+    </div>
+    <button class="btn ghost" (click)="load()">↻ Refresh</button>
+  </header>
+
+  @if (toast()) {
+    <div class="toast">✓ {{ toast() }}</div>
+  }
+
+  @if (loading()) {
+    <section class="sk-list">
+      @for (_ of [1, 2, 3, 4]; track $index) {
+        <div class="sk-row"></div>
+      }
+    </section>
+  } @else if (error()) {
+    <div class="banner">
+      <p>Could not load users — is auth-service running?</p>
+      <button class="btn ghost" (click)="load()">Retry</button>
+    </div>
+  } @else {
+    <div class="filters">
+      <button class="chip" [class.active]="filter() === 'ALL'" (click)="setFilter('ALL')">All ({{ users().length }})</button>
+      <button class="chip" [class.active]="filter() === 'ADMIN'" (click)="setFilter('ADMIN')">Admins ({{ adminCount() }})</button>
+      <button class="chip" [class.active]="filter() === 'USER'" (click)="setFilter('USER')">Customers ({{ userCount() }})</button>
+    </div>
+
+    <section class="panel table-wrap">
+      <div class="table">
+        <div class="tr th">
+          <span>User</span>
+          <span>Email</span>
+          <span>Role</span>
+          <span>Joined</span>
+          <span class="right">Actions</span>
+        </div>
+        @if (visible().length === 0) {
+          <p class="empty">No users in this view.</p>
+        } @else {
+          @for (u of visible(); track u.id) {
+            <div class="tr">
+              <span class="user">
+                <span class="avatar" [class.admin-av]="u.role === 'ADMIN'">{{ initial(u.username) }}</span>
+                <span class="uname">
+                  {{ u.username }}
+                  @if (isSelf(u)) {
+                    <span class="you">(you)</span>
+                  }
+                </span>
+              </span>
+              <span>{{ u.email }}</span>
+              <span><span class="pill" [class.admin]="u.role === 'ADMIN'">{{ u.role }}</span></span>
+              <span class="muted">{{ date(u) }}</span>
+              <span class="right">
+                <button
+                  class="btn small"
+                  [disabled]="workingId() === u.id"
+                  (click)="toggleRole(u)"
+                >
+                  {{ u.role === 'ADMIN' ? 'Make customer' : 'Make admin' }}
+                </button>
+                <button
+                  class="btn small danger"
+                  [disabled]="workingId() === u.id"
+                  (click)="remove(u)"
+                >
+                  Delete
+                </button>
+              </span>
+            </div>
+          }
+        }
+      </div>
+    </section>
+  }
+</div>
