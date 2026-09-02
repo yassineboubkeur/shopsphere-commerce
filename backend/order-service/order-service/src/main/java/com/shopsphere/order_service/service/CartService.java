@@ -4,6 +4,8 @@ import com.shopsphere.order_service.dto.AddToCartRequest;
 import com.shopsphere.order_service.dto.CheckoutResponse;
 import com.shopsphere.order_service.dto.UpdateQuantityRequest;
 import com.shopsphere.order_service.entity.*;
+import com.shopsphere.order_service.event.OrderCreatedEvent;
+import com.shopsphere.order_service.event.OrderEventPublisher;
 import com.shopsphere.order_service.repository.CartItemRepository;
 import com.shopsphere.order_service.repository.CartRepository;
 import com.shopsphere.order_service.repository.OrderRepository;
@@ -28,6 +30,7 @@ public class CartService {
     private final StockService stockService;
     private final OrderRepository orderRepository;
     private final PaymentRepository paymentRepository;
+    private final OrderEventPublisher orderEventPublisher;
 
     public Cart validateCart(Long userId) {
         Cart cart = cartRepository.findByUserId(userId)
@@ -145,6 +148,9 @@ public class CartService {
         orderItems.forEach(item -> item.setOrder(order));
         Order savedOrder = orderRepository.save(order);
 
+        stockService.decrementStock(savedOrder);
+        orderEventPublisher.publishOrderCreated(toOrderCreatedEvent(savedOrder));
+
         Payment payment = Payment.builder()
                 .order(savedOrder)
                 .amount(totalAmount)
@@ -171,6 +177,25 @@ public class CartService {
                         .paymentMethod(savedPayment.getPaymentMethod())
                         .amount(savedPayment.getAmount())
                         .build())
+                .build();
+    }
+
+    private OrderCreatedEvent toOrderCreatedEvent(Order order) {
+        List<OrderCreatedEvent.OrderItemEvent> itemEvents = order.getItems().stream()
+                .map(item -> OrderCreatedEvent.OrderItemEvent.builder()
+                        .productId(item.getProductId())
+                        .productName(item.getProductName())
+                        .price(item.getPrice())
+                        .quantity(item.getQuantity())
+                        .build())
+                .toList();
+
+        return OrderCreatedEvent.builder()
+                .orderId(order.getId())
+                .userId(order.getUserId())
+                .orderNumber(order.getOrderNumber())
+                .items(itemEvents)
+                .totalAmount(order.getTotalAmount())
                 .build();
     }
 }
