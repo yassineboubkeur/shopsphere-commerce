@@ -89,4 +89,15 @@ public class OrderController {
         orderService.deleteOrder(orderId, userId);
         return ResponseEntity.noContent().build();
     }
+
+    @DeleteMapping("/admin/{orderId}")
+    public ResponseEntity<Void> deleteOrderByAdmin(
+            @PathVariable Long orderId,
+            @RequestHeader(value = "X-User-Role", required = false) String role) {
+        if (role == null || !role.toUpperCase().contains("ADMIN")) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
+        orderService.deleteOrderByAdmin(orderId);
+        return ResponseEntity.noContent().build();
+    }
 }

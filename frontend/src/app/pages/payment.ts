@@ -12,6 +12,11 @@ interface Card {
   cvv: string;
 }
 
+interface CardMethod {
+  id: string;
+  name: string;
+}
+
 @Component({
   selector: 'app-payment',
   imports: [RouterLink],
@@ -32,6 +37,13 @@ export class PaymentComponent {
   protected readonly errors = signal<string[]>([]);
   protected readonly paying = signal(false);
   protected readonly paymentError = signal<string | null>(null);
+
+  protected readonly methods: CardMethod[] = [
+    { id: 'visa', name: 'Visa' },
+    { id: 'mastercard', name: 'Mastercard' },
+    { id: 'amex', name: 'American Express' },
+    { id: 'paypal', name: 'PayPal' },
+  ];
 
   constructor() {
     const id = Number(this.route.snapshot.paramMap.get('orderId'));
@@ -62,6 +74,10 @@ export class PaymentComponent {
             ? value.replace(/\D/g, '').slice(0, 4)
             : value;
     this.card.update((c) => ({ ...c, [field]: clean }));
+  }
+
+  methodLabel(): string {
+    return 'Credit Card';
   }
 
   pay(): void {
@@ -100,9 +116,15 @@ export class PaymentComponent {
             this.paymentError.set(res.message || 'Payment failed. Please check your card details.');
           }
         },
-        error: () => {
+        error: (err) => {
           this.paying.set(false);
-          this.paymentError.set('Payment service is unreachable. Please try again.');
+          if (err?.status === 401) {
+            this.paymentError.set('Your session has expired. Please log in again and retry.');
+          } else if (err?.status === 400) {
+            this.paymentError.set(err?.error?.message || 'Payment rejected. Please check your card details.');
+          } else {
+            this.paymentError.set('Payment service is unreachable. Please try again.');
+          }
         },
       });
   }

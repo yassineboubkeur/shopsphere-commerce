@@ -1,0 +1,140 @@
+<div class="home">
+  @if (addedName()) {
+    <div class="toast">✓ {{ addedName() }} added to cart</div>
+  }
+
+  <section class="hero">
+    <div class="hero-content">
+      <span class="hero-badge">{{ hero.badge }}</span>
+      <h1 class="hero-title">{{ hero.title }}</h1>
+      <p class="hero-subtitle">{{ hero.subtitle }}</p>
+      <div class="hero-actions">
+        <a class="btn btn-primary" [routerLink]="hero.primaryUrl">{{ hero.primaryCta }}</a>
+        <a class="btn btn-ghost" href="{{ hero.secondaryUrl }}">{{ hero.secondaryCta }}</a>
+      </div>
+    </div>
+    <div class="hero-art" aria-hidden="true">
+      <div class="art-shape shape-1"></div>
+      <div class="art-shape shape-2"></div>
+      <div class="art-card">
+        <span class="art-card-icon">🛍️</span>
+        <span class="art-card-label">ShopSphere</span>
+        <span class="art-card-sub">Premium goods, delivered</span>
+      </div>
+    </div>
+  </section>
+
+  <section class="features">
+    @for (f of features; track f.title) {
+      <div class="feature">
+        <span class="feature-icon">
+          @switch (f.icon) {
+            @case ('truck') {
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="3" width="15" height="13" rx="1"/><path d="M16 8h4l3 3v5h-7V8z"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
+            }
+            @case ('shield') {
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+            }
+            @case ('rotate') {
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+            }
+            @case ('headset') {
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 18v-6a9 9 0 0 1 18 0v6"/><path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3zM3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z"/></svg>
+            }
+          }
+        </span>
+        <div class="feature-text">
+          <span class="feature-title">{{ f.title }}</span>
+          <span class="feature-sub">{{ f.text }}</span>
+        </div>
+      </div>
+    }
+  </section>
+
+  <section class="stats" aria-hidden="true">
+    @for (s of stats; track s.label) {
+      <div class="stat">
+        <span class="stat-value">{{ s.value }}</span>
+        <span class="stat-label">{{ s.label }}</span>
+      </div>
+    }
+  </section>
+
+  @if (categories().length > 0) {
+    <section id="categories" class="section">
+      <div class="section-head">
+        <h2 class="section-title">Shop by Category</h2>
+        <a class="section-link" routerLink="/products">View all →</a>
+      </div>
+      <div class="category-grid">
+        @for (cat of categories(); track cat.id) {
+          <a class="category-card" [routerLink]="['/products']">
+            @if (cat.imageUrl) {
+              <img class="category-image" [src]="cat.imageUrl" [alt]="cat.name" />
+            } @else {
+              <div class="category-image placeholder">{{ cat.name[0] }}</div>
+            }
+            <div class="category-body">
+              <span class="category-name">{{ cat.name }}</span>
+              <span class="category-cta">Shop now</span>
+            </div>
+          </a>
+        }
+      </div>
+    </section>
+  }
+
+  <section class="promo">
+    <div class="promo-content">
+      <span class="promo-badge">Limited time offer</span>
+      <h2 class="promo-title">Season Sale — Up to 40% Off</h2>
+      <p class="promo-text">Refresh your cart with unbeatable deals on this season's favorites.</p>
+      <a class="btn btn-light" routerLink="/products">Shop the sale</a>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="section-head">
+      <h2 class="section-title">Featured Products</h2>
+      <a class="section-link" routerLink="/products">View all →</a>
+    </div>
+
+    @if (loading()) {
+      <app-loader />
+    } @else if (error()) {
+      <div class="alert error">
+        {{ error() }}
+        <a class="btn btn-primary" routerLink="/products">Browse products</a>
+      </div>
+    } @else if (featured().length === 0) {
+      <div class="empty">No featured products yet.</div>
+    } @else {
+      <div class="featured-grid">
+        @for (product of featured(); track product.id) {
+          <app-product-card [product]="product" (addToCart)="addToCart($event)" />
+        }
+      </div>
+    }
+  </section>
+
+  <section class="newsletter">
+    <div class="newsletter-content">
+      <h2 class="newsletter-title">Stay in the loop</h2>
+      <p class="newsletter-text">Subscribe for exclusive offers, new arrivals, and insider tips.</p>
+      @if (subscribed()) {
+        <p class="newsletter-success">✓ Thanks for subscribing! Check your inbox.</p>
+      } @else {
+        <form class="newsletter-form" (ngSubmit)="onSubmitSubscribe(newsletterEmail())">
+          <input
+            type="email"
+            name="email"
+            placeholder="Enter your email"
+            [value]="newsletterEmail()"
+            (input)="newsletterEmail.set($any($event.target).value)"
+          />
+          <button type="submit" class="btn btn-primary">Subscribe</button>
+        </form>
+      }
+    </div>
+  </section>
+</div>

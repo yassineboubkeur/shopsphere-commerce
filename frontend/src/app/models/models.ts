@@ -104,3 +104,14 @@ export interface AuthUser {
   email: string;
   role: string;
 }
+
+export interface Notification {
+  id: number;
+  userId: number;
+  type: string;
+  subject: string;
+  message: string;
+  status: string;
+  createdAt: string;
+  updatedAt: string;
+}

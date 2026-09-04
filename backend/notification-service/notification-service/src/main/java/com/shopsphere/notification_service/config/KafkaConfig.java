@@ -13,6 +13,7 @@ public class KafkaConfig {
     public static final String PAYMENT_FAILED_TOPIC = "payment-failed";
     public static final String ORDER_SHIPPED_TOPIC = "order-shipped";
     public static final String ORDER_DELIVERED_TOPIC = "order-delivered";
+    public static final String ORDER_CANCELLED_TOPIC = "order-cancelled";
 
     @Bean
     public NewTopic orderCreatedTopic() {
@@ -37,5 +38,10 @@ public class KafkaConfig {
     @Bean
     public NewTopic orderDeliveredTopic() {
         return TopicBuilder.name(ORDER_DELIVERED_TOPIC).partitions(1).replicas(1).build();
+    }
+
+    @Bean
+    public NewTopic orderCancelledTopic() {
+        return TopicBuilder.name(ORDER_CANCELLED_TOPIC).partitions(1).replicas(1).build();
     }
 }

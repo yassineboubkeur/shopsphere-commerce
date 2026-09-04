@@ -240,11 +240,12 @@ public class PaymentService {
     }
 
     private void publishPaymentSuccessful(Payment payment) {
+        String orderNumber = fetchOrderNumber(payment.getOrderId());
         paymentEventPublisher.publishPaymentSuccessful(PaymentSuccessfulEvent.builder()
                 .paymentId(payment.getId())
                 .orderId(payment.getOrderId())
                 .userId(payment.getUserId())
-                .orderNumber(null)
+                .orderNumber(orderNumber)
                 .amount(payment.getAmount())
                 .paymentMethod(payment.getPaymentMethod())
                 .transactionId(payment.getTransactionId())
@@ -252,16 +253,31 @@ public class PaymentService {
     }
 
     private void publishPaymentFailed(Payment payment) {
+        String orderNumber = fetchOrderNumber(payment.getOrderId());
         paymentEventPublisher.publishPaymentFailed(PaymentFailedEvent.builder()
                 .paymentId(payment.getId())
                 .orderId(payment.getOrderId())
                 .userId(payment.getUserId())
-                .orderNumber(null)
+                .orderNumber(orderNumber)
                 .amount(payment.getAmount())
                 .paymentMethod(payment.getPaymentMethod())
                 .failureReason(payment.getFailureReason())
                 .timestamp(LocalDateTime.now())
                 .build());
+    }
+
+    private String fetchOrderNumber(Long orderId) {
+        try {
+            @SuppressWarnings("unchecked")
+            Map<String, Object> order = restTemplate.getForObject(
+                    ORDER_SERVICE_URL + "/" + orderId, Map.class);
+            if (order != null && order.get("orderNumber") != null) {
+                return order.get("orderNumber").toString();
+            }
+        } catch (Exception e) {
+            log.warn("Could not fetch order number for orderId={}: {}", orderId, e.getMessage());
+        }
+        return null;
     }
 
     private void notifyOrderService(Long orderId, String transactionId) {

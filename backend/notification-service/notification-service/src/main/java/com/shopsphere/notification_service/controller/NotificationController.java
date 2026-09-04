@@ -52,4 +52,19 @@ public class NotificationController {
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
+
+    @PatchMapping("/{id}/status")
+    public ResponseEntity<Notification> updateStatus(@PathVariable Long id, @RequestBody java.util.Map<String, String> body) {
+        String status = body.get("status");
+        if (status == null || status.isBlank()) {
+            return ResponseEntity.badRequest().build();
+        }
+        return notificationRepository.findById(id)
+                .map(n -> {
+                    n.setStatus(status.trim().toUpperCase());
+                    return notificationRepository.save(n);
+                })
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
+    }
 }

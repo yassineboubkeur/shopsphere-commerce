@@ -2,6 +2,7 @@ import { Component, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ProductService, ProductRequest } from '../services/product.service';
 import { Product, ProductCategory } from '../models/models';
+import { ConfirmDialogService } from '../services/confirm-dialog.service';
 
 @Component({
   selector: 'app-product-management',
@@ -11,6 +12,7 @@ import { Product, ProductCategory } from '../models/models';
 })
 export class ProductManagementComponent {
   private readonly productsService = inject(ProductService);
+  private readonly confirm = inject(ConfirmDialogService);
 
   protected readonly products = signal<Product[]>([]);
   protected readonly categories = signal<ProductCategory[]>([]);
@@ -116,8 +118,13 @@ export class ProductManagementComponent {
     });
   }
 
-  remove(p: Product): void {
-    if (!confirm(`Delete "${p.name}"? This cannot be undone.`)) return;
+  async remove(p: Product): Promise<void> {
+    const ok = await this.confirm.confirm({
+      title: 'Delete this product?',
+      message: `Delete "${p.name}"? This cannot be undone.`,
+      confirmLabel: 'Delete',
+    });
+    if (!ok) return;
     this.toast.set('');
     this.productsService.delete(p.id).subscribe({
       next: () => {

@@ -81,6 +81,24 @@
   gap: 0.6rem;
 }
 
+.footer-contact .footer-links {
+  margin-bottom: 0.4rem;
+}
+
+.footer-contact .footer-links li {
+  display: block;
+}
+
+.footer-contact .footer-links a {
+  color: #b8c4cf;
+  text-decoration: none;
+  transition: color 0.15s ease;
+}
+
+.footer-contact .footer-links a:hover {
+  color: #2bb673;
+}
+
 .footer-contact .ico {
   color: #2bb673;
 }

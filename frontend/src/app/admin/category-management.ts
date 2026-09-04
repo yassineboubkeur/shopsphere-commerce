@@ -2,6 +2,7 @@ import { Component, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ProductService, CategoryRequest } from '../services/product.service';
 import { Product, ProductCategory } from '../models/models';
+import { ConfirmDialogService } from '../services/confirm-dialog.service';
 
 @Component({
   selector: 'app-category-management',
@@ -11,6 +12,7 @@ import { Product, ProductCategory } from '../models/models';
 })
 export class CategoryManagementComponent {
   private readonly productsService = inject(ProductService);
+  private readonly confirm = inject(ConfirmDialogService);
 
   protected readonly categories = signal<ProductCategory[]>([]);
   protected readonly loading = signal(true);
@@ -111,12 +113,16 @@ export class CategoryManagementComponent {
     });
   }
 
-  remove(c: ProductCategory): void {
+  async remove(c: ProductCategory): Promise<void> {
     const count = this.productCount.get(c.id) ?? 0;
-    const msg = count > 0
-      ? `Delete "${c.name}"? This has ${count} product(s) — they will become uncategorized.`
-      : `Delete "${c.name}"? This cannot be undone.`;
-    if (!confirm(msg)) return;
+    const ok = await this.confirm.confirm({
+      title: count > 0 ? 'Delete category with products?' : 'Delete this category?',
+      message: count > 0
+        ? `Delete "${c.name}"? This has ${count} product(s) — they will become uncategorized. This cannot be undone.`
+        : `Delete "${c.name}"? This cannot be undone.`,
+      confirmLabel: 'Delete',
+    });
+    if (!ok) return;
     this.toast.set('');
     this.productsService.deleteCategory(c.id).subscribe({
       next: () => {

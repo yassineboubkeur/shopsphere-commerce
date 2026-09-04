@@ -1,11 +1,13 @@
 import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
-import { signal } from '@angular/core';
+import { signal, computed } from '@angular/core';
+import { of } from 'rxjs';
 import { vi } from 'vitest';
 import { Navbar } from './navbar';
 import { AuthService } from '../services/auth.service';
 import { CartService } from '../services/cart.service';
 import { ThemeService } from '../services/theme.service';
+import { NotificationService } from '../services/notification.service';
 import { AuthUser } from '../models/models';
 
 describe('Navbar', () => {
@@ -17,6 +19,7 @@ describe('Navbar', () => {
       user: signal<AuthUser | null>(user).asReadonly(),
       isLoggedIn: signal(user != null).asReadonly(),
       isAdmin: signal(user?.role === 'ADMIN').asReadonly(),
+      userId: computed(() => user?.id ?? null),
       logout,
     };
   }
@@ -31,6 +34,7 @@ describe('Navbar', () => {
         { provide: AuthService, useValue: stubAuth(null) },
         { provide: CartService, useValue: { count: signal(0).asReadonly() } },
         { provide: ThemeService, useValue: { resolved: signal('light'), toggle: toggleTheme } },
+        { provide: NotificationService, useValue: { getByUser: () => of([]) } },
       ],
     }).compileComponents();
   });
@@ -91,7 +95,7 @@ describe('Navbar', () => {
   it('should hide the cart badge when the cart is empty', () => {
     const el = create().nativeElement as HTMLElement;
     const badge = el.querySelector('.cart-badge');
-    expect(badge?.getAttribute('hidden')).not.toBeNull();
+    expect(badge?.getAttribute('aria-hidden')).toBe('true');
   });
 
   it('should toggle the theme', () => {

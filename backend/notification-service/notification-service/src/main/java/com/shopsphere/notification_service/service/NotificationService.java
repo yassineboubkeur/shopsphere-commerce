@@ -2,6 +2,7 @@ package com.shopsphere.notification_service.service;
 
 import com.shopsphere.notification_service.entity.Notification;
 import com.shopsphere.notification_service.event.OrderCreatedEvent;
+import com.shopsphere.notification_service.event.OrderCancelledEvent;
 import com.shopsphere.notification_service.event.OrderDeliveredEvent;
 import com.shopsphere.notification_service.event.OrderShippedEvent;
 import com.shopsphere.notification_service.event.PaymentFailedEvent;
@@ -80,6 +81,13 @@ public class NotificationService {
         return sendNotification(notification);
     }
 
+    public Notification sendOrderCancelledNotification(OrderCancelledEvent event) {
+        String subject = "Order Cancelled - " + event.getOrderNumber();
+        String body = buildOrderCancelledBody(event);
+        Notification notification = createNotification(event.getUserId(), "ORDER_CANCELLED", subject, body);
+        return sendNotification(notification);
+    }
+
     private String buildOrderConfirmationBody(OrderCreatedEvent event) {
         StringBuilder sb = new StringBuilder();
         sb.append("Thank you for your order!\n\n");
@@ -129,6 +137,14 @@ public class NotificationService {
         sb.append("Great news! Your order has been delivered.\n\n");
         sb.append("Order Number: ").append(event.getOrderNumber()).append("\n");
         sb.append("Delivered At: ").append(event.getDeliveredAt()).append("\n");
+        return sb.toString();
+    }
+
+    private String buildOrderCancelledBody(OrderCancelledEvent event) {
+        StringBuilder sb = new StringBuilder();
+        sb.append("Your order has been cancelled.\n\n");
+        sb.append("Order Number: ").append(event.getOrderNumber()).append("\n");
+        sb.append("Cancelled At: ").append(event.getCancelledAt()).append("\n");
         return sb.toString();
     }
 }

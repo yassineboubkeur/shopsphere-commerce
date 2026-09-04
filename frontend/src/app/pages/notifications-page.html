@@ -1,0 +1,31 @@
+<div class="notif-page">
+  <h1>Notifications</h1>
+
+  @if (loading()) {
+    <div class="box">Loading notifications…</div>
+  } @else if (error()) {
+    <div class="box error">
+      <p>Could not load your notifications.</p>
+      <button type="button" class="retry" (click)="load()">Retry</button>
+    </div>
+  } @else if (sorted().length === 0) {
+    <div class="empty">
+      <span class="empty-icon">&#128276;</span>
+      <h2>No notifications yet</h2>
+      <p>You'll see updates here as soon as something happens.</p>
+    </div>
+  } @else {
+    <div class="notif-list">
+      @for (n of sorted(); track n.id) {
+        <div class="notif-row" [class.unread]="!isRead(n)" (click)="markAsRead(n)" [style.cursor]="isRead(n) ? 'default' : 'pointer'">
+          <span class="type-pill" [class]="typePillClass(n.type)">{{ typeLabel(n.type) }}</span>
+          <div class="notif-main">
+            <span class="notif-title">{{ n.subject }}</span>
+            <span class="notif-message">{{ n.message }}</span>
+          </div>
+          <span class="notif-time">{{ timeLabel(n.createdAt) }}</span>
+        </div>
+      }
+    </div>
+  }
+</div>

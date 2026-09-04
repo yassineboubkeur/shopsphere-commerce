@@ -1,6 +1,7 @@
 import { Component, computed, inject, signal } from '@angular/core';
 import { AdminService, AdminUserRow } from '../services/admin.service';
 import { AuthService } from '../services/auth.service';
+import { ConfirmDialogService } from '../services/confirm-dialog.service';
 
 @Component({
   selector: 'app-user-management',
@@ -10,6 +11,7 @@ import { AuthService } from '../services/auth.service';
 export class UserManagementComponent {
   private readonly admin = inject(AdminService);
   private readonly auth = inject(AuthService);
+  private readonly confirm = inject(ConfirmDialogService);
 
   protected readonly users = signal<AdminUserRow[]>([]);
   protected readonly loading = signal(true);
@@ -72,13 +74,18 @@ export class UserManagementComponent {
     });
   }
 
-  remove(u: AdminUserRow): void {
+  async remove(u: AdminUserRow): Promise<void> {
     if (u.id === this.selfId) {
       this.toast.set('You cannot delete your own account.');
       setTimeout(() => this.toast.set(''), 4000);
       return;
     }
-    if (!confirm(`Delete user ${u.email}? This cannot be undone.`)) return;
+    const ok = await this.confirm.confirm({
+      title: 'Delete this user?',
+      message: `Delete user ${u.email}? This cannot be undone.`,
+      confirmLabel: 'Delete',
+    });
+    if (!ok) return;
     this.workingId.set(u.id);
     this.toast.set('');
     this.admin.deleteUser(u.id).subscribe({

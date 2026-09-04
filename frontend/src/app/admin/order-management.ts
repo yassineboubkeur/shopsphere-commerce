@@ -1,6 +1,7 @@
 import { Component, computed, inject, signal } from '@angular/core';
 import { OrderService } from '../services/order.service';
 import { Order, OrderItem } from '../models/models';
+import { ConfirmDialogService } from '../services/confirm-dialog.service';
 
 interface StatusFlow {
   values: string[];
@@ -14,6 +15,7 @@ interface StatusFlow {
 })
 export class OrderManagementComponent {
   private readonly ordersService = inject(OrderService);
+  private readonly confirm = inject(ConfirmDialogService);
 
   protected readonly list = signal<Order[]>([]);
   protected readonly loading = signal(true);
@@ -91,13 +93,18 @@ export class OrderManagementComponent {
     });
   }
 
-  cancel(o: Order): void {
+  async cancel(o: Order): Promise<void> {
     if (this.flow.next(o.status) === null && o.status.toUpperCase() !== 'CANCELLED') {
       this.toast.set('Cannot cancel a delivered order.');
       setTimeout(() => this.toast.set(''), 4000);
       return;
     }
-    if (!confirm(`Cancel order ${o.orderNumber}?`)) return;
+    const ok = await this.confirm.confirm({
+      title: 'Cancel this order?',
+      message: `Cancel order ${o.orderNumber}? This action cannot be reversed.`,
+      confirmLabel: 'Cancel Order',
+    });
+    if (!ok) return;
     this.savingId.set(o.id);
     this.toast.set('');
     this.ordersService.updateStatus(o.id, 'CANCELLED').subscribe({

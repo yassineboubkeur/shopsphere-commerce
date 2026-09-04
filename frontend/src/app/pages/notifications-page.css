@@ -1,0 +1,172 @@
+.notif-page {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+h1 {
+  margin: 0;
+  font-size: 1.6rem;
+  color: var(--text);
+}
+
+.box {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 0.6rem;
+  padding: 2rem;
+  text-align: center;
+  color: var(--text-faint);
+}
+
+.box.error {
+  color: var(--danger-fg);
+}
+
+.box.error p {
+  margin: 0 0 1rem;
+}
+
+.retry {
+  background: var(--brand);
+  border: 1px solid var(--brand);
+  color: var(--brand-contrast);
+  padding: 0.5rem 1.4rem;
+  border-radius: 0.4rem;
+  cursor: pointer;
+}
+
+.retry:hover {
+  background: var(--brand-strong);
+}
+
+.empty {
+  padding: 4rem 1rem;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 0.6rem;
+}
+
+.empty-icon {
+  font-size: 3rem;
+}
+
+.empty h2 {
+  margin: 0.5rem 0 0;
+  color: var(--text);
+}
+
+.empty p {
+  color: var(--text-faint);
+  margin: 0;
+}
+
+.notif-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.notif-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 0.6rem;
+  padding: 1rem 1.25rem;
+}
+
+.notif-row.unread {
+  border-color: var(--border-strong);
+  background: var(--surface-2);
+  border-left: 3px solid var(--brand);
+}
+
+.type-pill {
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 0.2rem 0.6rem;
+  border-radius: 999px;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  white-space: nowrap;
+  margin-top: 0.15rem;
+}
+
+.type-pill.order {
+  background: var(--pill-confirmed-bg);
+  color: var(--pill-confirmed-fg);
+}
+
+.type-pill.payment {
+  background: var(--pill-delivered-bg);
+  color: var(--pill-delivered-fg);
+}
+
+.type-pill.shipping {
+  background: var(--pill-processing-bg);
+  color: var(--pill-processing-fg);
+}
+
+.type-pill.inventory {
+  background: var(--pill-pending-bg);
+  color: var(--pill-pending-fg);
+}
+
+.type-pill.cancelled {
+  background: var(--pill-cancelled-bg);
+  color: var(--pill-cancelled-fg);
+}
+
+.type-pill.delivered {
+  background: var(--pill-delivered-bg);
+  color: var(--pill-delivered-fg);
+}
+
+.type-pill.failed {
+  background: var(--pill-cancelled-bg);
+  color: var(--pill-cancelled-fg);
+}
+
+.type-pill.other {
+  background: var(--pill-pending-bg);
+  color: var(--pill-pending-fg);
+}
+
+.notif-main {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  min-width: 0;
+  flex: 1;
+}
+
+.notif-title {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.notif-message {
+  font-size: 0.9rem;
+  color: var(--text-muted);
+  line-height: 1.5;
+}
+
+.notif-time {
+  font-size: 0.8rem;
+  color: var(--text-faint);
+  white-space: nowrap;
+}
+
+@media (max-width: 560px) {
+  .notif-row {
+    flex-wrap: wrap;
+  }
+}

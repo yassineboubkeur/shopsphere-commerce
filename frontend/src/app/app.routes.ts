@@ -3,11 +3,13 @@ import { authGuard } from './guards/auth.guard';
 import { adminGuard } from './guards/admin.guard';
 
 export const routes: Routes = [
-  { path: '', redirectTo: '/products', pathMatch: 'full' },
+  { path: '', pathMatch: 'full', loadComponent: () => import('./pages/home').then(m => m.HomeComponent) },
   { path: 'products', loadComponent: () => import('./pages/product-list').then(m => m.ProductListComponent) },
   { path: 'products/:id', loadComponent: () => import('./pages/product-detail').then(m => m.ProductDetailComponent) },
   { path: 'login', loadComponent: () => import('./pages/login').then(m => m.LoginComponent) },
   { path: 'register', loadComponent: () => import('./pages/register').then(m => m.RegisterComponent) },
+  { path: 'contact', loadComponent: () => import('./pages/contact').then(m => m.ContactComponent) },
+  { path: 'policy', loadComponent: () => import('./pages/policy').then(m => m.PolicyComponent) },
   { path: 'cart', canActivate: [authGuard], loadComponent: () => import('./pages/cart').then(m => m.CartComponent) },
   { path: 'checkout', canActivate: [authGuard], loadComponent: () => import('./pages/checkout').then(m => m.CheckoutComponent) },
   { path: 'payment/:orderId', canActivate: [authGuard], loadComponent: () => 
@@ -15,6 +17,7 @@ import('./pages/payment').then(m => m.PaymentComponent) },
   { path: 'confirmation/:orderId', canActivate: [authGuard], loadComponent: () => import('./pages/order-confirmation').then(m => m.OrderConfirmationComponent) },
   { path: 'orders', canActivate: [authGuard], loadComponent: () => import('./pages/order-history').then(m => m.OrderHistoryComponent) },
   { path: 'orders/:id', canActivate: [authGuard], loadComponent: () => import('./pages/order-detail').then(m => m.OrderDetailComponent) },
+  { path: 'notifications', canActivate: [authGuard], loadComponent: () => import('./pages/notifications-page').then(m => m.NotificationsPageComponent) },
   {
     path: 'admin',
     canActivate: [adminGuard],
@@ -30,5 +33,5 @@ import('./pages/payment').then(m => m.PaymentComponent) },
       { path: 'analytics', loadComponent: () => import('./admin/statistics').then(m => m.StatisticsComponent) },
     ]
   },
-  { path: '**', redirectTo: '/products' }
+  { path: '**', redirectTo: '/' }
 ];

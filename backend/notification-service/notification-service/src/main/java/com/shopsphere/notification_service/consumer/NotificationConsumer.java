@@ -2,6 +2,7 @@ package com.shopsphere.notification_service.consumer;
 
 import com.shopsphere.notification_service.config.KafkaConfig;
 import com.shopsphere.notification_service.event.OrderCreatedEvent;
+import com.shopsphere.notification_service.event.OrderCancelledEvent;
 import com.shopsphere.notification_service.event.OrderDeliveredEvent;
 import com.shopsphere.notification_service.event.OrderShippedEvent;
 import com.shopsphere.notification_service.event.PaymentFailedEvent;
@@ -73,6 +74,17 @@ public class NotificationConsumer {
             notificationService.sendOrderDeliveredNotification(event);
         } catch (Exception e) {
             log.error("Failed to process OrderDelivered event: {}", e.getMessage(), e);
+        }
+    }
+
+    @KafkaListener(topics = KafkaConfig.ORDER_CANCELLED_TOPIC, groupId = "notification-service")
+    public void handleOrderCancelled(String message) {
+        try {
+            OrderCancelledEvent event = objectMapper.readValue(message, OrderCancelledEvent.class);
+            log.info("=== NOTIFICATION: Order Cancelled ===");
+            notificationService.sendOrderCancelledNotification(event);
+        } catch (Exception e) {
+            log.error("Failed to process OrderCancelled event: {}", e.getMessage(), e);
         }
     }
 }

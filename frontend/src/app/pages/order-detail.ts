@@ -4,6 +4,7 @@ import { AuthService } from '../services/auth.service';
 import { OrderService, ShippingInfo } from '../services/order.service';
 import { PaymentService } from '../services/payment.service';
 import { Order } from '../models/models';
+import { ConfirmDialogService } from '../services/confirm-dialog.service';
 
 interface ShippingForm {
   shippingName: string;
@@ -25,6 +26,7 @@ export class OrderDetailComponent {
   private readonly auth = inject(AuthService);
   private readonly orders = inject(OrderService);
   private readonly payments = inject(PaymentService);
+  private readonly confirm = inject(ConfirmDialogService);
 
   protected readonly order = signal<Order | null>(null);
   protected readonly loading = signal(true);
@@ -173,11 +175,16 @@ export class OrderDetailComponent {
     });
   }
 
-  deleteThisOrder(): void {
+  async deleteThisOrder(): Promise<void> {
     const order = this.order();
     const userId = this.auth.userId();
     if (!order || userId === null) return;
-    if (!confirm('Delete this PENDING order? This cannot be undone.')) return;
+    const ok = await this.confirm.confirm({
+      title: 'Delete this order?',
+      message: 'Delete this PENDING order? This cannot be undone.',
+      confirmLabel: 'Delete',
+    });
+    if (!ok) return;
     this.deleting.set(true);
     this.orders.deleteOrder(order.id, userId).subscribe({
       next: () => {

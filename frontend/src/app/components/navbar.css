@@ -66,6 +66,25 @@
   transition: background 0.15s ease, color 0.15s ease;
 }
 
+.nav-links a.nav-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.link-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+}
+
+.link-icon svg {
+  width: 18px;
+  height: 18px;
+}
+
 .nav-links a:hover {
   background: var(--surface-hover);
   color: var(--text-strong);
@@ -80,25 +99,217 @@
   position: relative;
   display: inline-flex;
   align-items: center;
-  gap: 0.4rem;
+  gap: 0.45rem;
+  color: var(--text-muted);
+  text-decoration: none;
+  transition: color 0.15s ease;
 }
 
-.cart-badge[hidden] {
-  display: none;
+.cart-link:hover {
+  color: var(--brand);
+}
+
+.cart-icon {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+}
+
+.cart-icon svg {
+  width: 24px;
+  height: 24px;
 }
 
 .cart-badge {
-  min-width: 18px;
-  height: 18px;
+  position: absolute;
+  top: -6px;
+  right: -8px;
+  min-width: 17px;
+  height: 17px;
   padding: 0 5px;
   border-radius: 999px;
   background: var(--danger);
   color: #fff;
-  font-size: 0.7rem;
+  font-size: 0.68rem;
   font-weight: 700;
-  line-height: 18px;
+  line-height: 17px;
   text-align: center;
-  display: inline-block;
+  box-shadow: 0 0 0 2px var(--surface);
+}
+
+.cart-badge[aria-hidden="true"] {
+  display: none;
+}
+
+.cart-label {
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+
+.notif-link {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  color: var(--text-muted);
+  text-decoration: none;
+  transition: color 0.15s ease;
+}
+
+.notif-link:hover {
+  color: var(--brand);
+}
+
+.notif-icon {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+}
+
+.notif-icon svg {
+  width: 24px;
+  height: 24px;
+}
+
+.notif-badge {
+  position: absolute;
+  top: -6px;
+  right: -8px;
+  min-width: 17px;
+  height: 17px;
+  padding: 0 5px;
+  border-radius: 999px;
+  background: var(--accent);
+  color: #fff;
+  font-size: 0.68rem;
+  font-weight: 700;
+  line-height: 17px;
+  text-align: center;
+  box-shadow: 0 0 0 2px var(--surface);
+}
+
+.notif-badge[aria-hidden="true"] {
+  display: none;
+}
+
+.notif-label {
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+
+.notif-wrap {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+
+.notif-link {
+  border: none;
+  background: none;
+  cursor: pointer;
+  font: inherit;
+  padding: 0;
+}
+
+.notif-panel {
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 0;
+  width: 340px;
+  max-width: 88vw;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 0.6rem;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.18);
+  z-index: 50;
+  overflow: hidden;
+}
+
+.notif-panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.85rem 1rem;
+  font-weight: 700;
+  color: var(--text);
+  border-bottom: 1px solid var(--border);
+  font-size: 0.95rem;
+}
+
+.notif-panel-count {
+  font-size: 0.75rem;
+  font-weight: 700;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
+  border-radius: 999px;
+  background: var(--accent);
+  color: #fff;
+  line-height: 20px;
+  text-align: center;
+}
+
+.notif-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  max-height: 320px;
+  overflow-y: auto;
+}
+
+.notif-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.notif-item:last-child {
+  border-bottom: none;
+}
+
+.notif-item.unread {
+  background: var(--brand-soft);
+}
+
+.notif-item-title {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.notif-item-message {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  line-height: 1.4;
+}
+
+.notif-item-time {
+  font-size: 0.75rem;
+  color: var(--text-faint);
+}
+
+.notif-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 2rem 1rem;
+  text-align: center;
+  color: var(--text-faint);
+  font-size: 0.9rem;
+}
+
+.notif-empty-icon {
+  font-size: 1.8rem;
 }
 
 .nav-auth {

@@ -46,4 +46,15 @@ public class OrderEventPublisher {
             log.error("Failed to publish OrderDelivered event: {}", e.getMessage(), e);
         }
     }
+
+    public void publishOrderCancelled(OrderCancelledEvent event) {
+        try {
+            String json = objectMapper.writeValueAsString(event);
+            log.info("Publishing OrderCancelled event: orderId={} | orderNumber={}",
+                    event.getOrderId(), event.getOrderNumber());
+            kafkaTemplate.send(KafkaConfig.ORDER_CANCELLED_TOPIC, String.valueOf(event.getOrderId()), json).get();
+        } catch (Exception e) {
+            log.error("Failed to publish OrderCancelled event: {}", e.getMessage(), e);
+        }
+    }
 }

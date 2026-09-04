@@ -7,6 +7,7 @@ import com.shopsphere.order_service.entity.Order;
 import com.shopsphere.order_service.entity.OrderItem;
 import com.shopsphere.order_service.entity.Payment;
 import com.shopsphere.order_service.event.OrderCreatedEvent;
+import com.shopsphere.order_service.event.OrderCancelledEvent;
 import com.shopsphere.order_service.event.OrderDeliveredEvent;
 import com.shopsphere.order_service.event.OrderEventPublisher;
 import com.shopsphere.order_service.event.OrderShippedEvent;
@@ -108,6 +109,12 @@ public class OrderService {
 
         if (status == Order.OrderStatus.CANCELLED && previous != Order.OrderStatus.CANCELLED) {
             stockService.restoreStock(saved);
+            orderEventPublisher.publishOrderCancelled(OrderCancelledEvent.builder()
+                    .orderId(saved.getId())
+                    .userId(saved.getUserId())
+                    .orderNumber(saved.getOrderNumber())
+                    .cancelledAt(LocalDateTime.now())
+                    .build());
         }
 
         if (status == Order.OrderStatus.SHIPPED) {
@@ -190,7 +197,20 @@ public class OrderService {
         if (order.getStatus() != Order.OrderStatus.PENDING) {
             throw new RuntimeException("Only PENDING orders can be deleted");
         }
+        String orderNumber = order.getOrderNumber();
         stockService.restoreStock(order);
+        orderRepository.delete(order);
+        orderEventPublisher.publishOrderCancelled(OrderCancelledEvent.builder()
+                .orderId(orderId)
+                .userId(userId)
+                .orderNumber(orderNumber)
+                .cancelledAt(LocalDateTime.now())
+                .build());
+    }
+
+    @Transactional
+    public void deleteOrderByAdmin(Long orderId) {
+        Order order = getOrderById(orderId);
         orderRepository.delete(order);
     }
 
