@@ -1,0 +1,225 @@
+name: CI/CD
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: write
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  backend-build:
+    name: Build (${{ matrix.service }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        service:
+          - service-discovery
+          - api-gateway
+          - auth-service
+          - product-service
+          - order-service
+          - payment-service
+          - inventory-service
+          - notification-service
+          - analytics-service
+    defaults:
+      run:
+        working-directory: backend/${{ matrix.service }}/${{ matrix.service }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "26"
+
+      - name: Cache Maven dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.m2/repository
+          key: m2-${{ runner.os }}-${{ matrix.service }}-${{ hashFiles('**/pom.xml') }}
+          restore-keys: |
+            m2-${{ runner.os }}-${{ matrix.service }}
+            m2-${{ runner.os }}
+
+      - name: Compile and package (skip tests)
+        run: ./mvnw -B -DskipTests clean package
+
+      - name: Upload jar artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.service }}-jar
+          path: backend/${{ matrix.service }}/${{ matrix.service }}/target/*.jar
+          if-no-files-found: error
+
+  backend-test:
+    name: Tests (${{ matrix.service }})
+    needs: backend-build
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        service:
+          - service-discovery
+          - api-gateway
+          - auth-service
+          - product-service
+          - order-service
+          - payment-service
+          - inventory-service
+          - notification-service
+          - analytics-service
+    defaults:
+      run:
+        working-directory: backend/${{ matrix.service }}/${{ matrix.service }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "26"
+
+      - name: Cache Maven dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.m2/repository
+          key: m2-${{ runner.os }}-${{ matrix.service }}-${{ hashFiles('**/pom.xml') }}
+          restore-keys: |
+            m2-${{ runner.os }}-${{ matrix.service }}
+            m2-${{ runner.os }}
+
+      - name: Unit tests (surefire)
+        run: ./mvnw -B test
+
+      - name: Integration tests (verify)
+        run: ./mvnw -B verify -Dsurefire.skip=true
+
+      - name: Upload surefire reports
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.service }}-surefire-reports
+          path: backend/${{ matrix.service }}/${{ matrix.service }}/target/surefire-reports
+          if-no-files-found: warn
+
+  frontend-build:
+    name: Frontend build
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build (production)
+        run: npm run build
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-dist
+          path: frontend/dist/frontend/browser
+          if-no-files-found: error
+
+  frontend-test:
+    name: Frontend tests
+    needs: frontend-build
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Unit tests
+        run: npm test -- --watch=false
+
+  docker-build:
+    name: Build and push Docker images
+    needs: [backend-build, frontend-build]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build images
+        run: docker compose build --progress plain
+
+      - name: Push images to GHCR
+        run: |
+          for s in service-discovery api-gateway auth-service product-service order-service payment-service inventory-service notification-service analytics-service frontend; do
+            docker tag shopsphere-commerce/$s:latest ghcr.io/${{ github.repository }}/$s:latest
+            docker tag shopsphere-commerce/$s:latest ghcr.io/${{ github.repository }}/$s:${{ github.sha }}
+            docker push ghcr.io/${{ github.repository }}/$s:latest
+            docker push ghcr.io/${{ github.repository }}/$s:${{ github.sha }}
+          done
+
+  deploy:
+    name: Deploy to server
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    needs: docker-build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Upload compose files to server
+        uses: appleboy/scp-action@v0.1.9
+        with:
+          host: ${{ secrets.DEPLOY_HOST }}
+          username: ${{ secrets.DEPLOY_USER }}
+          key: ${{ secrets.DEPLOY_SSH_KEY }}
+          source: "docker-compose.yml,docker/postgres/init.sql"
+          target: "~/shopsphere-commerce"
+
+      - name: Pull images and update stack
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.DEPLOY_HOST }}
+          username: ${{ secrets.DEPLOY_USER }}
+          key: ${{ secrets.DEPLOY_SSH_KEY }}
+          script: |
+            set -e
+            cd ~/shopsphere-commerce
+            docker login ghcr.io -u ${{ github.actor }} -p ${{ secrets.GITHUB_TOKEN }}
+            for s in service-discovery api-gateway auth-service product-service order-service payment-service inventory-service notification-service analytics-service frontend; do
+              docker pull ghcr.io/${{ github.repository }}/$s:${{ github.sha }}
+              docker tag ghcr.io/${{ github.repository }}/$s:${{ github.sha }} shopsphere-commerce/$s:latest
+            done
+            docker compose up -d --no-build
+            docker compose ps
