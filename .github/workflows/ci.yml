@@ -195,15 +195,19 @@ jobs:
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     needs: docker-build
     runs-on: ubuntu-latest
+    env:
+      DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+      DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
+      DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
     steps:
       - uses: actions/checkout@v4
 
       - name: Skip deploy (server secrets not configured)
-        if: secrets.DEPLOY_HOST == '' || secrets.DEPLOY_USER == '' || secrets.DEPLOY_SSH_KEY == ''
+        if: env.DEPLOY_HOST == '' || env.DEPLOY_USER == '' || env.DEPLOY_SSH_KEY == ''
         run: echo "Server secrets not configured - skipping deployment."
 
       - name: Upload compose files to server
-        if: secrets.DEPLOY_HOST != '' && secrets.DEPLOY_USER != '' && secrets.DEPLOY_SSH_KEY != ''
+        if: env.DEPLOY_HOST != '' && env.DEPLOY_USER != '' && env.DEPLOY_SSH_KEY != ''
         uses: appleboy/scp-action@v0.1.9
         with:
           host: ${{ secrets.DEPLOY_HOST }}
@@ -213,7 +217,7 @@ jobs:
           target: "~/shopsphere-commerce"
 
       - name: Pull images and update stack
-        if: secrets.DEPLOY_HOST != '' && secrets.DEPLOY_USER != '' && secrets.DEPLOY_SSH_KEY != ''
+        if: env.DEPLOY_HOST != '' && env.DEPLOY_USER != '' && env.DEPLOY_SSH_KEY != ''
         uses: appleboy/ssh-action@v1.2.0
         with:
           host: ${{ secrets.DEPLOY_HOST }}
