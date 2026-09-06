@@ -35,3 +35,17 @@ gateway:
     /api/inventory: http://localhost:8085
     /api/notifications: http://localhost:8086
     /api/analytics: http://localhost:8087
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,env,loggers,beans,conditions,prometheus
+  endpoint:
+    health:
+      show-details: always
+
+logging:
+  structured:
+    format:
+      console: logstash
